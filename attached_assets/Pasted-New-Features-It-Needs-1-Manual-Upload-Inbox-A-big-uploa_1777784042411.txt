@@ -1,0 +1,265 @@
+New Features It Needs
+1. Manual Upload Inbox
+
+A big upload/drop zone:
+
+Drop screenshots, PDFs, Excel files, CSVs, Word docs, images, or notes here.
+
+Upload categories:
+
+Provider website screenshot
+Pricing sheet
+Clinic directory
+Email response
+PDF packet
+Excel/CSV provider list
+Service menu
+Employer account form
+Provider agreement
+Manual research note
+Other
+2. Auto Folder Creation
+
+When something is uploaded, the tool asks or infers:
+
+State:
+City:
+Provider name:
+Service category:
+Source type:
+
+Then creates a structured folder record:
+
+/provider-intelligence/
+  /CA/
+    /Fresno/
+      /Example Clinic/
+        /raw/
+        /processed/
+        /screenshots/
+        /documents/
+        /spreadsheets/
+        /extracted-records/
+3. Raw Evidence Vault
+
+Every upload should be preserved.
+
+Fields:
+
+Original filename
+File type
+Upload date
+Uploaded by
+Source URL if known
+Associated provider
+Associated city/state
+Raw file storage path
+Extracted text
+Processing status
+
+Statuses:
+
+Uploaded
+Processing
+Extracted
+Needs Review
+Mapped
+Duplicate Possible
+Failed Extraction
+4. Extraction Engine
+
+For each upload, the tool should try to extract:
+
+Clinic name
+Clinic type
+Address
+City
+State
+ZIP
+Phone
+Fax
+Website
+Email
+Contact person
+Services offered
+Pricing clues
+Employer account clues
+Corporate billing clues
+NET terms clues
+Accepts outside forms
+TPA-friendly clues
+Payment requirements
+Source text snippets
+Confidence level
+
+For screenshots/images, it needs OCR/image text extraction.
+
+For PDFs, it needs PDF text extraction.
+
+For Excel/CSV, it needs row parsing and column mapping.
+
+For pasted notes, it needs AI cleanup and structured extraction.
+
+5. Smart Search Index
+
+The app should not just store files. It should make them searchable by meaning.
+
+Search examples:
+
+“clinics near Rogersville that do chest x-rays”
+“providers that mention employer billing”
+“places that accept outside forms”
+“dental providers with panoramic x-ray”
+“stress test providers in Florida”
+“clinics requiring payment at time of service”
+“yellow fever vaccine clinics”
+“uploaded pricing sheets from Missouri”
+6. Review Queue
+
+The tool should not blindly trust extraction.
+
+Every extracted provider goes into a review queue:
+
+Ready to verify
+Missing phone
+Missing fax
+Possible duplicate
+Needs service confirmation
+Needs account setup confirmation
+Needs pricing confirmation
+Needs provider agreement
+High-value lead
+7. Evidence-Backed Provider Profiles
+
+Each provider profile should show:
+
+Provider summary
+Extracted fields
+Raw uploaded files
+Screenshots
+PDFs
+Spreadsheets
+Source snippets
+Confidence level
+What the tool thinks this provider can do
+What still needs human confirmation
+
+So when Matt or Andy asks, “Where did we get that from?” you can open the provider profile and show the raw source.
+
+Better Page Structure
+
+The app should now have these main tabs:
+
+Dashboard
+Upload Intake
+Evidence Library
+Provider Database
+Smart Search
+Map Coverage
+Review Queue
+Saved Research Folders
+Provider Profiles
+Settings
+Exact Prompt to Update the Build
+
+Use this to redirect the app builder:
+
+Important correction to the app direction:
+
+This app should NOT primarily be a crawler-first tool.
+
+The primary workflow should be manual intelligence intake.
+
+The user will browse the web manually and find useful provider information from screenshots, PDFs, Excel sheets, CSV files, webpages, provider forms, pricing sheets, clinic directories, and emails. The app should allow the user to upload or drop those files into the tool.
+
+When a file is uploaded, the app should:
+
+1. Preserve the raw uploaded file exactly as-is.
+2. Create a folder-style evidence record, similar to how a laptop folder would organize files.
+3. Allow the user to assign or confirm:
+   - provider name
+   - city
+   - state
+   - ZIP
+   - service category
+   - source type
+   - notes
+4. Extract useful structured data from the uploaded file.
+5. Create or update a provider record.
+6. Add the extracted provider/service/account/billing data to the smart search index.
+7. Map the provider if address/location data is available.
+8. Add uncertain items to a review queue.
+9. Link every extracted field back to the raw uploaded source.
+
+The app should become an Occu-Med Provider Intelligence Intake Hub.
+
+Core screens to build:
+
+1. Upload Intake
+   - Large drag-and-drop upload zone
+   - Accept screenshots, images, PDFs, Excel, CSV, Word docs, text files
+   - Manual paste box for copied website text or notes
+   - Source URL field
+   - State/city/provider/service tags
+   - Upload category selector
+
+2. Evidence Library
+   - Folder-style file browser
+   - Organize by state/city/provider/source type
+   - Show raw uploads
+   - Show processed/extracted data
+   - Show upload status
+
+3. Extraction Review
+   - Show extracted fields side-by-side with the source file
+   - Allow user to approve, edit, reject, or merge extracted fields
+   - Mark records as verified, needs call, needs pricing, needs account setup, duplicate, or not suitable
+
+4. Provider Database
+   - Searchable/filterable table of extracted provider records
+   - Include services, account setup fields, billing fields, admin fields, verification status, source count
+
+5. Provider Profile
+   - Show provider details
+   - Show all linked raw uploads
+   - Show source snippets supporting each field
+   - Show services offered
+   - Show employer account / billing / outside form clues
+   - Show notes and review history
+
+6. Smart Search
+   - Search across extracted provider data and raw uploaded evidence
+   - Support searches like:
+     “providers that accept outside forms”
+     “NET terms”
+     “corporate billing”
+     “stress test”
+     “chest x-ray”
+     “yellow fever”
+     “Rogersville MO”
+     “pricing sheet”
+
+7. Map Coverage
+   - Map providers based on extracted location data
+   - Show provider markers
+   - Filter by service, status, state, city, account/billing flags
+   - Show areas where uploaded evidence exists
+
+8. Dashboard
+   - Total uploaded evidence files
+   - Total extracted providers
+   - Providers mapped
+   - Providers needing review
+   - High-value employer account leads
+   - States covered
+   - Services covered
+   - Recent uploads
+   - Processing queue
+
+Use the same Liquid Glass / macOS Tahoe design direction:
+dark luminous glass, purple/magenta/blue glow, translucent cards, polished internal command-center feel.
+
+Important:
+Do not fake real crawling.
+If extraction is simulated for now, label it clearly as simulated extraction.
+The prototype should still allow uploading, tagging, folder-style organization, mock extraction re

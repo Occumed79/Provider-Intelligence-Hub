@@ -1,0 +1,109 @@
+The current build has the right general page structure, but the execution is not close enough to the intended product.
+
+Do NOT add new features yet. First, upgrade the existing product quality, UI, and map.
+
+Main problems to fix:
+
+1. The UI is too primitive.
+It currently looks like a basic dark admin dashboard with purple accents. I need a premium Apple/macOS Tahoe Liquid Glass interface:
+- translucent glass panels
+- layered depth
+- soft blur
+- luminous borders
+- animated glowing orbs in the background
+- animated light streaks / subtle moving gradients
+- premium spacing and typography
+- cards that feel like glass floating over a luminous background
+- hover states with glow, shimmer, and light movement
+- less flat black empty space
+- more polished internal command-center feel
+
+Use the uploaded visual references:
+- crawl-bg.png
+- dashboard-bg.png
+- hero-us-map-glow.png
+- clinic-placeholder.png
+
+The app should feel like a high-end intelligence command center, not a generic dashboard.
+
+2. The map is not a real map.
+The current hex-grid state map is not acceptable as the primary map.
+Replace or upgrade it with a recognizable U.S. map visualization.
+It should show:
+- U.S. state outlines or a recognizable geographic U.S. map
+- glowing provider markers
+- coverage intensity by state
+- service filters
+- click-to-open provider/location details
+- animated scan/progress layer
+- luminous purple/magenta/blue network lines or pulses
+
+If a real map library is too much, use a polished SVG U.S. map component or a stylized U.S. outline map. Do not use a generic hex grid as the main map.
+
+3. The background needs motion.
+Add a reusable animated background component used across the app:
+- slow moving luminous orbs
+- subtle magenta/purple/blue light beams
+- faint grid or data rain texture
+- radial glow following the page depth
+- no distracting animation, but visible premium movement
+
+4. The dashboard needs more visual depth.
+Upgrade the dashboard with:
+- hero section using the glowing U.S. map visual
+- animated intake pipeline
+- evidence-processing status cards
+- recent uploads with source type icons
+- extraction confidence cards
+- review queue preview
+- provider coverage summary
+- service intelligence summary
+
+5. Upload Intake should feel like the core workflow.
+Make the upload page more powerful and visually rich:
+- large glass drop zone
+- raw evidence vault preview
+- metadata form beside it
+- extraction pipeline steps:
+  Uploaded → Raw Stored → Text Extracted → Provider Matched → Review Created → Mapped
+- simulated extraction result should show confidence and source snippets
+- show generated folder path clearly
+Example:
+Provider Intelligence / TN / Rogersville / Rogersville Family & Occ Health / raw_uploads
+
+6. Evidence Library should look like a real file intelligence vault.
+It should include:
+- folder tree on left
+- file cards/list in center
+- selected file preview/details on right
+- status badges
+- extracted fields
+- linked provider
+- source confidence
+- review status
+
+7. Provider Database should be richer.
+Add:
+- more columns or expandable rows
+- account/billing badges
+- services offered
+- source count
+- confidence score
+- last reviewed
+- source evidence link
+- quick actions
+
+8. Review Queue currently says empty even though the stats show pending items.
+Fix that inconsistency.
+If there are 5 pending and 3 high priority items, the queue must display actual review cards.
+
+9. Keep the app focused on manual intelligence intake.
+Do not shift back to crawler-first.
+The core workflow is:
+manual upload → raw evidence preserved → folder created → extraction → provider record → smart search → map → review queue.
+
+10. Do not claim real AI extraction if it is simulated.
+Keep the label “Simulated Extraction” for now, but make the UI feel production-ready.
+
+Please improve the current app in place. Do not rebuild from scratch unless absolutely necessary.
+Focus on visual polish, Apple Liquid Glass design, animated luminous background, real/stylized U.S. map, richer upload/evidence workflow, and fixing the Review Queue data display.
