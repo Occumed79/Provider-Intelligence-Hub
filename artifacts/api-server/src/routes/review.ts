@@ -1,0 +1,120 @@
+import { Router, type IRouter } from "express";
+import { db } from "@workspace/db";
+import { reviewItemsTable } from "@workspace/db";
+import { eq, sql, and } from "drizzle-orm";
+import {
+  GetReviewItemParams,
+  UpdateReviewItemParams,
+  UpdateReviewItemBody,
+  ListReviewItemsQueryParams,
+} from "@workspace/api-zod";
+
+const router: IRouter = Router();
+
+router.get("/review/counts", async (req, res): Promise<void> => {
+  const all = await db.select().from(reviewItemsTable);
+
+  const counts = {
+    total: all.length,
+    pending: all.filter((r) => r.reviewStatus === "pending").length,
+    inProgress: all.filter((r) => r.reviewStatus === "in_progress").length,
+    approved: all.filter((r) => r.reviewStatus === "approved").length,
+    rejected: all.filter((r) => r.reviewStatus === "rejected").length,
+    highPriority: all.filter((r) => r.priority === "high").length,
+  };
+
+  res.json(counts);
+});
+
+router.get("/review", async (req, res): Promise<void> => {
+  const params = ListReviewItemsQueryParams.safeParse(req.query);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const conditions = [];
+  if (params.data.status) {
+    conditions.push(eq(reviewItemsTable.reviewStatus, params.data.status));
+  }
+  if (params.data.priority) {
+    conditions.push(eq(reviewItemsTable.priority, params.data.priority));
+  }
+
+  const items = await db
+    .select()
+    .from(reviewItemsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(sql`${reviewItemsTable.createdAt} DESC`);
+
+  res.json(items);
+});
+
+router.get("/review/:id", async (req, res): Promise<void> => {
+  const params = GetReviewItemParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [item] = await db
+    .select()
+    .from(reviewItemsTable)
+    .where(eq(reviewItemsTable.id, params.data.id));
+
+  if (!item) {
+    res.status(404).json({ error: "Review item not found" });
+    return;
+  }
+
+  res.json(item);
+});
+
+router.patch("/review/:id", async (req, res): Promise<void> => {
+  const params = UpdateReviewItemParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const body = UpdateReviewItemBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const updates: Record<string, unknown> = {};
+  if (body.data.reviewStatus !== undefined) updates.reviewStatus = body.data.reviewStatus;
+  if (body.data.priority !== undefined) updates.priority = body.data.priority;
+  if (body.data.notes !== undefined) updates.notes = body.data.notes;
+  if (body.data.assignedTo !== undefined) updates.assignedTo = body.data.assignedTo;
+
+  if (body.data.reviewStatus === "approved" || body.data.reviewStatus === "rejected") {
+    updates.resolvedAt = new Date();
+  }
+
+  if (Object.keys(updates).length === 0) {
+    const [existing] = await db.select().from(reviewItemsTable).where(eq(reviewItemsTable.id, params.data.id));
+    if (!existing) {
+      res.status(404).json({ error: "Review item not found" });
+      return;
+    }
+    res.json(existing);
+    return;
+  }
+
+  const [item] = await db
+    .update(reviewItemsTable)
+    .set(updates)
+    .where(eq(reviewItemsTable.id, params.data.id))
+    .returning();
+
+  if (!item) {
+    res.status(404).json({ error: "Review item not found" });
+    return;
+  }
+
+  res.json(item);
+});
+
+export default router;
