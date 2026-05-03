@@ -1,0 +1,1137 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Occu-Med Provider Intelligence Hub API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Dashboard statistics
+  - name: evidence
+    description: Evidence file management
+  - name: providers
+    description: Provider record management
+  - name: review
+    description: Review queue management
+  - name: search
+    description: Smart search
+  - name: upload
+    description: File upload
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent-uploads:
+    get:
+      operationId: getRecentUploads
+      tags: [dashboard]
+      summary: Get recent uploaded evidence files
+      responses:
+        "200":
+          description: Recent uploads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvidenceFile"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /evidence:
+    get:
+      operationId: listEvidenceFiles
+      tags: [evidence]
+      summary: List evidence files
+      parameters:
+        - name: state
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: city
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: providerName
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: sourceType
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of evidence files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvidenceFile"
+    post:
+      operationId: createEvidenceFile
+      tags: [evidence]
+      summary: Create evidence file record (after upload)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvidenceFileBody"
+      responses:
+        "201":
+          description: Created evidence file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceFile"
+
+  /evidence/{id}:
+    get:
+      operationId: getEvidenceFile
+      tags: [evidence]
+      summary: Get evidence file by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Evidence file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceFile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateEvidenceFile
+      tags: [evidence]
+      summary: Update evidence file metadata
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEvidenceFileBody"
+      responses:
+        "200":
+          description: Updated evidence file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidenceFile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteEvidenceFile
+      tags: [evidence]
+      summary: Delete evidence file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /evidence/folder-tree:
+    get:
+      operationId: getEvidenceFolderTree
+      tags: [evidence]
+      summary: Get folder tree structure for evidence library
+      responses:
+        "200":
+          description: Folder tree
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FolderNode"
+
+  /upload:
+    post:
+      operationId: uploadFile
+      tags: [upload]
+      summary: Upload a file (multipart/form-data)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                state:
+                  type: string
+                city:
+                  type: string
+                providerName:
+                  type: string
+                sourceType:
+                  type: string
+                category:
+                  type: string
+                sourceUrl:
+                  type: string
+                notes:
+                  type: string
+              required:
+                - file
+      responses:
+        "201":
+          description: Upload result with evidence file and simulated extraction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /upload/paste:
+    post:
+      operationId: uploadPastedText
+      tags: [upload]
+      summary: Upload pasted text or notes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasteUploadBody"
+      responses:
+        "201":
+          description: Upload result with evidence file and simulated extraction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
+
+  /providers:
+    get:
+      operationId: listProviders
+      tags: [providers]
+      summary: List providers
+      parameters:
+        - name: state
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: city
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: serviceType
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: verificationStatus
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: hasLocation
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+    post:
+      operationId: createProvider
+      tags: [providers]
+      summary: Create a provider record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderBody"
+      responses:
+        "201":
+          description: Created provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+
+  /providers/{id}:
+    get:
+      operationId: getProvider
+      tags: [providers]
+      summary: Get provider by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateProvider
+      tags: [providers]
+      summary: Update provider record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderBody"
+      responses:
+        "200":
+          description: Updated provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /providers/map:
+    get:
+      operationId: getProvidersForMap
+      tags: [providers]
+      summary: Get providers with location data for map display
+      responses:
+        "200":
+          description: Providers with location
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MapProvider"
+
+  /providers/states-coverage:
+    get:
+      operationId: getStatesCoverage
+      tags: [providers]
+      summary: Get coverage statistics by state
+      responses:
+        "200":
+          description: States coverage
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StateCoverage"
+
+  /review:
+    get:
+      operationId: listReviewItems
+      tags: [review]
+      summary: List review queue items
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: priority
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Review queue items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReviewItem"
+
+  /review/{id}:
+    get:
+      operationId: getReviewItem
+      tags: [review]
+      summary: Get review item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Review item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateReviewItem
+      tags: [review]
+      summary: Update review item (approve, reject, edit)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReviewItemBody"
+      responses:
+        "200":
+          description: Updated review item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /review/counts:
+    get:
+      operationId: getReviewCounts
+      tags: [review]
+      summary: Get review queue counts by status
+      responses:
+        "200":
+          description: Review counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewCounts"
+
+  /search:
+    get:
+      operationId: search
+      tags: [search]
+      summary: Smart search across providers and evidence
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    DashboardStats:
+      type: object
+      properties:
+        totalEvidenceFiles:
+          type: integer
+        totalProviders:
+          type: integer
+        providersMapped:
+          type: integer
+        providersNeedingReview:
+          type: integer
+        highValueLeads:
+          type: integer
+        statesCovered:
+          type: integer
+        servicesCovered:
+          type: integer
+        processingQueue:
+          type: integer
+        recentUploadsCount:
+          type: integer
+      required:
+        - totalEvidenceFiles
+        - totalProviders
+        - providersMapped
+        - providersNeedingReview
+        - highValueLeads
+        - statesCovered
+        - servicesCovered
+        - processingQueue
+        - recentUploadsCount
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        entityName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - description
+        - createdAt
+
+    EvidenceFile:
+      type: object
+      properties:
+        id:
+          type: integer
+        originalFilename:
+          type: string
+        fileType:
+          type: string
+        fileSize:
+          type: ["integer", "null"]
+        mimeType:
+          type: ["string", "null"]
+        storagePath:
+          type: ["string", "null"]
+        uploadDate:
+          type: string
+          format: date-time
+        uploadedBy:
+          type: ["string", "null"]
+        sourceUrl:
+          type: ["string", "null"]
+        associatedProvider:
+          type: ["string", "null"]
+        associatedCity:
+          type: ["string", "null"]
+        associatedState:
+          type: ["string", "null"]
+        sourceType:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        extractedText:
+          type: ["string", "null"]
+        processingStatus:
+          type: string
+        notes:
+          type: ["string", "null"]
+        providerId:
+          type: ["integer", "null"]
+        folderPath:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - originalFilename
+        - fileType
+        - uploadDate
+        - processingStatus
+        - createdAt
+        - updatedAt
+
+    CreateEvidenceFileBody:
+      type: object
+      properties:
+        originalFilename:
+          type: string
+        fileType:
+          type: string
+        fileSize:
+          type: ["integer", "null"]
+        mimeType:
+          type: ["string", "null"]
+        storagePath:
+          type: ["string", "null"]
+        sourceUrl:
+          type: ["string", "null"]
+        associatedProvider:
+          type: ["string", "null"]
+        associatedCity:
+          type: ["string", "null"]
+        associatedState:
+          type: ["string", "null"]
+        sourceType:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        extractedText:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - originalFilename
+        - fileType
+
+    UpdateEvidenceFileBody:
+      type: object
+      properties:
+        associatedProvider:
+          type: ["string", "null"]
+        associatedCity:
+          type: ["string", "null"]
+        associatedState:
+          type: ["string", "null"]
+        sourceType:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        processingStatus:
+          type: ["string", "null"]
+        providerId:
+          type: ["integer", "null"]
+
+    FolderNode:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        type:
+          type: string
+        fileCount:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/FolderNode"
+      required:
+        - name
+        - path
+        - type
+        - fileCount
+
+    UploadResult:
+      type: object
+      properties:
+        evidenceFile:
+          $ref: "#/components/schemas/EvidenceFile"
+        extractedProvider:
+          $ref: "#/components/schemas/Provider"
+        reviewItem:
+          $ref: "#/components/schemas/ReviewItem"
+        extractionSimulated:
+          type: boolean
+        extractedFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractedField"
+      required:
+        - evidenceFile
+        - extractionSimulated
+
+    PasteUploadBody:
+      type: object
+      properties:
+        text:
+          type: string
+        state:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        providerName:
+          type: ["string", "null"]
+        sourceType:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        sourceUrl:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - text
+
+    ExtractedField:
+      type: object
+      properties:
+        id:
+          type: integer
+        fieldName:
+          type: string
+        fieldValue:
+          type: string
+        confidenceLevel:
+          type: ["string", "null"]
+        sourceSnippet:
+          type: ["string", "null"]
+        evidenceFileId:
+          type: integer
+        providerId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - fieldName
+        - fieldValue
+        - evidenceFileId
+        - createdAt
+
+    Provider:
+      type: object
+      properties:
+        id:
+          type: integer
+        clinicName:
+          type: string
+        clinicType:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        zip:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        fax:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        contactPerson:
+          type: ["string", "null"]
+        servicesOffered:
+          type: ["string", "null"]
+        pricingNotes:
+          type: ["string", "null"]
+        employerAccountClues:
+          type: ["string", "null"]
+        corporateBillingClues:
+          type: ["string", "null"]
+        netTermsClues:
+          type: ["string", "null"]
+        acceptsOutsideForms:
+          type: ["string", "null"]
+        tpaFriendlyClues:
+          type: ["string", "null"]
+        paymentRequirements:
+          type: ["string", "null"]
+        verificationStatus:
+          type: string
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        sourceCount:
+          type: integer
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - clinicName
+        - verificationStatus
+        - sourceCount
+        - createdAt
+        - updatedAt
+
+    ProviderDetail:
+      allOf:
+        - $ref: "#/components/schemas/Provider"
+        - type: object
+          properties:
+            evidenceFiles:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceFile"
+            extractedFields:
+              type: array
+              items:
+                $ref: "#/components/schemas/ExtractedField"
+            reviewItems:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReviewItem"
+          required:
+            - evidenceFiles
+            - extractedFields
+            - reviewItems
+
+    CreateProviderBody:
+      type: object
+      properties:
+        clinicName:
+          type: string
+        clinicType:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        zip:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        fax:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        contactPerson:
+          type: ["string", "null"]
+        servicesOffered:
+          type: ["string", "null"]
+        pricingNotes:
+          type: ["string", "null"]
+        employerAccountClues:
+          type: ["string", "null"]
+        corporateBillingClues:
+          type: ["string", "null"]
+        netTermsClues:
+          type: ["string", "null"]
+        acceptsOutsideForms:
+          type: ["string", "null"]
+        tpaFriendlyClues:
+          type: ["string", "null"]
+        paymentRequirements:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        evidenceFileId:
+          type: ["integer", "null"]
+      required:
+        - clinicName
+
+    UpdateProviderBody:
+      type: object
+      properties:
+        clinicName:
+          type: ["string", "null"]
+        clinicType:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        zip:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        fax:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        contactPerson:
+          type: ["string", "null"]
+        servicesOffered:
+          type: ["string", "null"]
+        pricingNotes:
+          type: ["string", "null"]
+        employerAccountClues:
+          type: ["string", "null"]
+        corporateBillingClues:
+          type: ["string", "null"]
+        netTermsClues:
+          type: ["string", "null"]
+        acceptsOutsideForms:
+          type: ["string", "null"]
+        tpaFriendlyClues:
+          type: ["string", "null"]
+        paymentRequirements:
+          type: ["string", "null"]
+        verificationStatus:
+          type: ["string", "null"]
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+
+    MapProvider:
+      type: object
+      properties:
+        id:
+          type: integer
+        clinicName:
+          type: string
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        latitude:
+          type: number
+        longitude:
+          type: number
+        verificationStatus:
+          type: string
+        servicesOffered:
+          type: ["string", "null"]
+        clinicType:
+          type: ["string", "null"]
+      required:
+        - id
+        - clinicName
+        - latitude
+        - longitude
+        - verificationStatus
+
+    StateCoverage:
+      type: object
+      properties:
+        state:
+          type: string
+        providerCount:
+          type: integer
+        evidenceCount:
+          type: integer
+        mappedCount:
+          type: integer
+      required:
+        - state
+        - providerCount
+        - evidenceCount
+        - mappedCount
+
+    ReviewItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        reviewStatus:
+          type: string
+        priority:
+          type: string
+        issueType:
+          type: string
+        description:
+          type: string
+        providerId:
+          type: ["integer", "null"]
+        evidenceFileId:
+          type: ["integer", "null"]
+        providerName:
+          type: ["string", "null"]
+        assignedTo:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        resolvedAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - reviewStatus
+        - priority
+        - issueType
+        - description
+        - createdAt
+        - updatedAt
+
+    UpdateReviewItemBody:
+      type: object
+      properties:
+        reviewStatus:
+          type: ["string", "null"]
+        priority:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        assignedTo:
+          type: ["string", "null"]
+
+    ReviewCounts:
+      type: object
+      properties:
+        total:
+          type: integer
+        pending:
+          type: integer
+        inProgress:
+          type: integer
+        approved:
+          type: integer
+        rejected:
+          type: integer
+        highPriority:
+          type: integer
+      required:
+        - total
+        - pending
+        - inProgress
+        - approved
+        - rejected
+        - highPriority
+
+    SearchResults:
+      type: object
+      properties:
+        providers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Provider"
+        evidenceFiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceFile"
+        totalResults:
+          type: integer
+        query:
+          type: string
+      required:
+        - providers
+        - evidenceFiles
+        - totalResults
+        - query
