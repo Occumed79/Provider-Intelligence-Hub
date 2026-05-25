@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export function AnimatedBackground() {
   return (
-    <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden" style={{ backgroundColor: 'hsl(28 20% 4%)' }}>
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ backgroundColor: 'hsl(28 20% 4%)' }}>
 
       {/* Faint warm grid */}
       <div
