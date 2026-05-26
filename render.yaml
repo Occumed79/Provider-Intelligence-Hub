@@ -33,3 +33,5 @@ services:
         value: 3000
       - key: BASE_PATH
         value: /
+      - key: VITE_API_BASE_URL
+        sync: false
