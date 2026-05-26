@@ -27,9 +27,16 @@ NODE_VERSION=22
 NODE_ENV=production
 PORT=3000
 BASE_PATH=/
+VITE_API_BASE_URL=<backend Render URL>
 ```
 
-The frontend Vite config requires PORT and BASE_PATH during build.
+Example:
+
+```bash
+VITE_API_BASE_URL=https://provider-intelligence-hub-api.onrender.com
+```
+
+The frontend Vite config requires PORT and BASE_PATH during build. The frontend API client uses VITE_API_BASE_URL to call the deployed backend instead of trying to call API routes from the static site domain.
 
 ### 2. Backend API
 
@@ -56,6 +63,15 @@ DATABASE_URL=<Render PostgreSQL external/internal URL>
 FRONTEND_ORIGIN=<frontend Render URL>
 ```
 
+Backend checks:
+
+```bash
+/api/healthz
+/api/status
+```
+
+Use /api/status after deployment to confirm that the API is running and the database connection is healthy.
+
 ## Important notes
 
 - This is a pnpm workspace. Do not use npm install for this repo.
@@ -68,6 +84,6 @@ FRONTEND_ORIGIN=<frontend Render URL>
 
 1. Confirm backend database schema and migrations.
 2. Confirm all API routes used by the frontend.
-3. Connect frontend API client to the deployed backend URL.
-4. Harden upload/import flow for provider spreadsheets.
-5. Improve provider table, provider profile, upload, and outreach pages using the same liquid-glass design language.
+3. Harden upload/import flow for provider spreadsheets.
+4. Improve provider table, provider profile, upload, and outreach pages using the same liquid-glass design language.
+5. Add stronger empty states and frontend API-error messaging for deployment handoff.
