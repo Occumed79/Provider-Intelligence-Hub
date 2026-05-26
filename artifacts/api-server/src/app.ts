@@ -48,4 +48,19 @@ app.get("/", (_req, res) => {
 
 app.use("/api", router);
 
+app.use((_req, res) => {
+  res.status(404).json({
+    error: "Not found",
+    message: "The requested Provider Intelligence Hub API route does not exist.",
+  });
+});
+
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  logger.error({ err }, "Unhandled API error");
+  res.status(500).json({
+    error: "Internal server error",
+    message: "Provider Intelligence Hub API encountered an unexpected error.",
+  });
+});
+
 export default app;
