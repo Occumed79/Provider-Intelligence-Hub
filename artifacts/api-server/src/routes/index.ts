@@ -9,6 +9,7 @@ import uploadRouter from "./upload";
 import analyticsRouter from "./analytics";
 import outreachMgmtRouter from "./outreach_mgmt";
 import secureCommsRouter from "./secure_comms";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(uploadRouter);
 router.use(analyticsRouter);
 router.use(outreachMgmtRouter);
 router.use(secureCommsRouter);
+router.use(settingsRouter);
 
 export default router;
