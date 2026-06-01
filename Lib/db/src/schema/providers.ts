@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, real, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -32,11 +32,28 @@ export const providersTable = pgTable("providers", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export const insertProviderSchema = createInsertSchema(providersTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const providerNotesTable = pgTable("provider_notes", {
+  id: serial("id").primaryKey(),
+  providerId: integer("provider_id").notNull().references(() => providersTable.id),
+  note: text("note").notNull(),
+  createdBy: text("created_by").notNull().default("system"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const providerActivityTable = pgTable("provider_activity", {
+  id: serial("id").primaryKey(),
+  providerId: integer("provider_id").notNull().references(() => providersTable.id),
+  activityType: text("activity_type").notNull(),
+  title: text("title").notNull(),
+  detail: text("detail"),
+  createdBy: text("created_by").notNull().default("system"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const insertProviderSchema = createInsertSchema(providersTable).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertProviderNoteSchema = createInsertSchema(providerNotesTable).omit({ id: true, createdAt: true });
+export const insertProviderActivitySchema = createInsertSchema(providerActivityTable).omit({ id: true, createdAt: true });
 export type InsertProvider = z.infer<typeof insertProviderSchema>;
 export type Provider = typeof providersTable.$inferSelect;
+export type ProviderNote = typeof providerNotesTable.$inferSelect;
+export type ProviderActivity = typeof providerActivityTable.$inferSelect;
