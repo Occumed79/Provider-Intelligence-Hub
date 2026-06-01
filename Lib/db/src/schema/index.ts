@@ -8,3 +8,4 @@ export * from "./secure_messages";
 export * from "./difficulty_reports";
 export * from "./audit_events";
 export * from "./app_settings";
+export * from "./currency_fee_schedules";
