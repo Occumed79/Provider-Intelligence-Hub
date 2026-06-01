@@ -13,6 +13,16 @@ import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
+const STATE_ABBREVIATIONS: Record<string, string> = {
+  Alabama: "AL", Alaska: "AK", Arizona: "AZ", Arkansas: "AR", California: "CA", Colorado: "CO", Connecticut: "CT", Delaware: "DE",
+  Florida: "FL", Georgia: "GA", Hawaii: "HI", Idaho: "ID", Illinois: "IL", Indiana: "IN", Iowa: "IA", Kansas: "KS", Kentucky: "KY",
+  Louisiana: "LA", Maine: "ME", Maryland: "MD", Massachusetts: "MA", Michigan: "MI", Minnesota: "MN", Mississippi: "MS", Missouri: "MO",
+  Montana: "MT", Nebraska: "NE", Nevada: "NV", "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM", "New York": "NY",
+  "North Carolina": "NC", "North Dakota": "ND", Ohio: "OH", Oklahoma: "OK", Oregon: "OR", Pennsylvania: "PA", "Rhode Island": "RI",
+  "South Carolina": "SC", "South Dakota": "SD", Tennessee: "TN", Texas: "TX", Utah: "UT", Vermont: "VT", Virginia: "VA", Washington: "WA",
+  "West Virginia": "WV", Wisconsin: "WI", Wyoming: "WY", "District of Columbia": "DC",
+};
+
 function asArray<T = any>(value: unknown): T[] {
   return Array.isArray(value) ? value : [];
 }
@@ -26,6 +36,12 @@ function formatDate(value: unknown): string {
   return Number.isNaN(date.getTime()) ? "Unknown date" : format(date, "MMM d, h:mm a");
 }
 
+function normalizeState(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  return STATE_ABBREVIATIONS[raw] ?? raw.toUpperCase();
+}
+
 export default function Dashboard() {
   const { data: statsData, isLoading: isLoadingStats } = useGetDashboardStats();
   const { data: recentUploadsData, isLoading: isLoadingUploads } = useGetRecentUploads();
@@ -36,18 +52,19 @@ export default function Dashboard() {
   const recentUploads = asArray<any>(recentUploadsData);
   const activities = asArray<any>(activitiesData);
   const stateCoverage = asArray<any>(coverageData);
+  const coveredStates = new Set(stateCoverage.map((d) => normalizeState(d?.state)).filter(Boolean));
 
-  const apiReturnedNonJson =
+  const apiReturnedUnexpectedData =
     (!isLoadingUploads && recentUploadsData && !Array.isArray(recentUploadsData)) ||
     (!isLoadingActivity && activitiesData && !Array.isArray(activitiesData)) ||
     (!isLoadingCoverage && coverageData && !Array.isArray(coverageData));
 
   return (
     <div className="space-y-6">
-      {apiReturnedNonJson && (
-        <Card className="glass-panel border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-4 text-sm text-amber-200">
-            The static site is online, but live API data is not available from this Cloudflare Pages deployment yet. Showing empty dashboard sections instead of crashing.
+      {apiReturnedUnexpectedData && (
+        <Card className="glass-panel border-primary/30 bg-primary/5">
+          <CardContent className="p-4 text-sm text-primary">
+            The dashboard loaded, but one or more API responses did not match the expected data shape. Empty sections are being shown instead of crashing.
           </CardContent>
         </Card>
       )}
@@ -55,9 +72,9 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight glow-text text-white">Command Center</h1>
-          <p className="text-muted-foreground mt-1">Intelligence overview for Occu-Med operations.</p>
+          <p className="text-muted-foreground mt-1">Live intelligence overview for Occu-Med operations.</p>
         </div>
-        <Link href="/upload" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium shadow-[0_0_20px_rgba(168,85,247,0.5)] transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] border border-primary/50">
+        <Link href="/upload" className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium shadow-[0_0_20px_rgba(18,173,165,0.45)] transition-all hover:shadow-[0_0_30px_rgba(150,238,0,0.45)] border border-primary/50">
           <Upload className="h-4 w-4" />
           New Intake
         </Link>
@@ -75,24 +92,24 @@ export default function Dashboard() {
                 <Skeleton className="w-[80%] h-[300px] bg-white/5 rounded-2xl" />
               </div>
             ) : (
-              <ComposableMap projection="geoAlbersUsa" className="w-full h-full drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+              <ComposableMap projection="geoAlbersUsa" className="w-full h-full drop-shadow-[0_0_15px_rgba(18,173,165,0.3)]">
                 <Geographies geography={geoUrl}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
-                      const stateCode = geo.properties.name;
-                      const stateData = stateCoverage.find((d) => d?.state === stateCode || d?.state === geo.id);
-                      const isCovered = Boolean(stateData);
+                      const stateName = geo.properties.name;
+                      const stateAbbr = normalizeState(stateName);
+                      const isCovered = coveredStates.has(stateAbbr) || coveredStates.has(stateName.toUpperCase()) || coveredStates.has(String(geo.id));
 
                       return (
                         <Geography
                           key={geo.rsmKey}
                           geography={geo}
-                          fill={isCovered ? "rgba(230, 155, 0, 0.38)" : "rgba(255, 255, 255, 0.02)"}
-                          stroke="rgba(255, 200, 0, 0.15)"
+                          fill={isCovered ? "rgba(18, 173, 165, 0.46)" : "rgba(255, 255, 255, 0.025)"}
+                          stroke="rgba(101, 187, 153, 0.22)"
                           strokeWidth={0.5}
                           style={{
                             default: { outline: "none" },
-                            hover: { fill: "rgba(230, 180, 0, 0.65)", outline: "none", filter: "drop-shadow(0 0 10px rgba(230,180,0,1))" },
+                            hover: { fill: "rgba(150, 238, 0, 0.48)", outline: "none", filter: "drop-shadow(0 0 10px rgba(18,173,165,0.8))" },
                             pressed: { outline: "none" },
                           }}
                         />
@@ -104,34 +121,22 @@ export default function Dashboard() {
             )}
             <div className="absolute bottom-4 right-6 flex items-center gap-4 text-xs text-muted-foreground bg-black/40 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
               <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-white/5" /> No Data</span>
-              <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary/40 shadow-[0_0_5px_rgba(230,180,0,0.5)]" /> Tracked</span>
+              <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary/40 shadow-[0_0_5px_rgba(18,173,165,0.5)]" /> Tracked</span>
             </div>
           </CardContent>
         </Card>
 
         <div className="flex flex-col gap-4">
-          <StatCard
-            title="Total Evidence"
-            value={stats.totalEvidenceFiles}
-            icon={FileText}
-            isLoading={isLoadingStats}
-            trend="+12% from last week"
-            trendUp={true}
-          />
-          <StatCard
-            title="Providers Tracked"
-            value={stats.totalProviders}
-            icon={Building2}
-            isLoading={isLoadingStats}
-            trend="+5% from last week"
-            trendUp={true}
-          />
+          <StatCard title="Total Evidence" value={stats.totalEvidenceFiles} icon={FileText} isLoading={isLoadingStats} href="/evidence" note="Live evidence files" />
+          <StatCard title="Providers Tracked" value={stats.totalProviders} icon={Building2} isLoading={isLoadingStats} href="/providers" note="Live provider records" />
           <StatCard
             title="Needs Review"
             value={stats.providersNeedingReview}
             icon={AlertTriangle}
             isLoading={isLoadingStats}
-            alert={typeof stats.providersNeedingReview === "number" && stats.providersNeedingReview > 10}
+            href="/review"
+            note="Open review queue"
+            alert={typeof stats.providersNeedingReview === "number" && stats.providersNeedingReview > 0}
           />
         </div>
       </div>
@@ -175,7 +180,9 @@ export default function Dashboard() {
             ) : (
               <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center h-full">
                 <FileText className="h-8 w-8 mb-2 opacity-30" />
-                <p>No recent uploads found.</p>
+                <p className="font-medium text-white">No intake files have been uploaded yet.</p>
+                <p className="text-xs mt-1 mb-4">Upload an intake file to populate evidence, providers, review items, and activity.</p>
+                <Link href="/upload" className="text-xs bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 px-3 py-2 rounded-lg transition-colors">Upload first intake file</Link>
               </div>
             )}
           </CardContent>
@@ -204,7 +211,7 @@ export default function Dashboard() {
               <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[5px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-px before:bg-gradient-to-b before:from-primary/50 before:via-white/10 before:to-transparent mt-2">
                 {activities.map((activity, index) => (
                   <div key={activity?.id ?? index} className="relative flex items-start justify-between md:justify-normal md:odd:flex-row-reverse group">
-                    <div className="flex items-center justify-center w-3 h-3 rounded-full border-2 border-background bg-primary shadow-[0_0_8px_rgba(230,180,0,0.7)] shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 mt-1.5" />
+                    <div className="flex items-center justify-center w-3 h-3 rounded-full border-2 border-background bg-primary shadow-[0_0_8px_rgba(18,173,165,0.7)] shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 mt-1.5" />
                     <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-3 rounded-lg bg-white/[0.02] border border-white/[0.05] ml-4 md:ml-0 group-hover:bg-white/[0.04] transition-colors">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-semibold text-xs text-white capitalize tracking-wide">{activity?.type ?? "Activity"}</span>
@@ -218,7 +225,9 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="text-center text-muted-foreground py-8">
-                No recent activity.
+                <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p className="font-medium text-white">No activity has been recorded yet.</p>
+                <p className="text-xs mt-1">Activity will appear after uploads, reviews, provider updates, and outreach actions.</p>
               </div>
             )}
           </CardContent>
@@ -228,9 +237,9 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, icon: Icon, isLoading, trend, trendUp, alert, subtitle }: any) {
-  return (
-    <Card className="glass-panel overflow-hidden relative group h-full flex flex-col justify-center">
+function StatCard({ title, value, icon: Icon, isLoading, alert, note, href }: any) {
+  const content = (
+    <Card className="glass-panel overflow-hidden relative group h-full flex flex-col justify-center transition-colors hover:border-primary/40">
       <div className="absolute -right-4 -top-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
         <Icon className="h-32 w-32 text-primary" />
       </div>
@@ -242,23 +251,22 @@ function StatCard({ title, value, icon: Icon, isLoading, trend, trendUp, alert, 
           <Skeleton className="h-10 w-24 bg-white/5 rounded-lg" />
         ) : (
           <div className="flex items-baseline gap-2">
-            <div className={`text-4xl font-bold tracking-tight ${alert ? "text-orange-400 drop-shadow-[0_0_15px_rgba(228,114,0,0.5)]" : "text-white glow-text"}`}>
+            <div className={`text-4xl font-bold tracking-tight ${alert ? "text-primary drop-shadow-[0_0_15px_rgba(150,238,0,0.35)]" : "text-white glow-text"}`}>
               {value !== undefined && value !== null ? value : "0"}
             </div>
-            {subtitle && <div className="text-xs text-muted-foreground font-medium">{subtitle}</div>}
           </div>
         )}
-        {trend && (
-          <div className="mt-3 flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${trendUp ? "bg-amber-400 shadow-[0_0_5px_rgba(230,180,0,0.8)]" : "bg-orange-400 shadow-[0_0_5px_rgba(228,114,0,0.8)]"}`} />
-            <p className={`text-xs font-medium ${trendUp ? "text-amber-400" : "text-orange-400"}`}>
-              {trend}
-            </p>
+        {note && (
+          <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary/70 shadow-[0_0_5px_rgba(18,173,165,0.7)]" />
+            {note}
           </div>
         )}
       </CardContent>
     </Card>
   );
+
+  return href ? <Link href={href}>{content}</Link> : content;
 }
 
 function StatusBadge({ status }: { status?: string }) {
@@ -267,17 +275,17 @@ function StatusBadge({ status }: { status?: string }) {
   let glowClass = "";
 
   if (safeStatus.includes("Extracted") || safeStatus.includes("Mapped") || safeStatus.includes("Approved")) {
-    colorClass = "bg-amber-500/10 text-amber-400 border-amber-500/30";
-    glowClass = "shadow-[inset_0_0_10px_rgba(230,180,0,0.1),0_0_5px_rgba(230,180,0,0.2)]";
-  } else if (safeStatus.includes("Processing")) {
-    colorClass = "bg-yellow-500/10 text-yellow-300 border-yellow-500/30";
-    glowClass = "shadow-[inset_0_0_10px_rgba(230,204,0,0.1),0_0_5px_rgba(230,204,0,0.2)]";
-  } else if (safeStatus.includes("Review") || safeStatus.includes("Pending")) {
     colorClass = "bg-primary/10 text-primary border-primary/30";
-    glowClass = "shadow-[inset_0_0_10px_rgba(230,180,0,0.1),0_0_5px_rgba(230,180,0,0.2)]";
+    glowClass = "shadow-[inset_0_0_10px_rgba(18,173,165,0.1),0_0_5px_rgba(18,173,165,0.2)]";
+  } else if (safeStatus.includes("Processing")) {
+    colorClass = "bg-teal-500/10 text-teal-300 border-teal-500/30";
+    glowClass = "shadow-[inset_0_0_10px_rgba(18,173,165,0.1),0_0_5px_rgba(18,173,165,0.2)]";
+  } else if (safeStatus.includes("Review") || safeStatus.includes("Pending")) {
+    colorClass = "bg-lime-500/10 text-lime-300 border-lime-500/30";
+    glowClass = "shadow-[inset_0_0_10px_rgba(150,238,0,0.1),0_0_5px_rgba(150,238,0,0.2)]";
   } else if (safeStatus.includes("Failed") || safeStatus.includes("Duplicate")) {
-    colorClass = "bg-orange-500/10 text-orange-400 border-orange-500/30";
-    glowClass = "shadow-[inset_0_0_10px_rgba(228,114,0,0.1),0_0_5px_rgba(228,114,0,0.2)]";
+    colorClass = "bg-red-500/10 text-red-300 border-red-500/30";
+    glowClass = "shadow-[inset_0_0_10px_rgba(239,68,68,0.1),0_0_5px_rgba(239,68,68,0.2)]";
   }
 
   return (
