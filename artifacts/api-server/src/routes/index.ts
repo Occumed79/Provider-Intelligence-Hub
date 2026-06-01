@@ -10,6 +10,7 @@ import analyticsRouter from "./analytics";
 import outreachMgmtRouter from "./outreach_mgmt";
 import secureCommsRouter from "./secure_comms";
 import settingsRouter from "./settings";
+import currencyFeeSchedulesRouter from "./currency_fee_schedules";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(analyticsRouter);
 router.use(outreachMgmtRouter);
 router.use(secureCommsRouter);
 router.use(settingsRouter);
+router.use(currencyFeeSchedulesRouter);
 
 export default router;
