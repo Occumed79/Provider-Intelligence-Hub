@@ -2,129 +2,98 @@ import { motion } from "framer-motion";
 
 export function AnimatedBackground() {
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ backgroundColor: 'hsl(28 20% 4%)' }}>
-
-      {/* Faint warm grid */}
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ backgroundColor: '#00233a' }}>
       <div
-        className="absolute inset-0 opacity-[0.07]"
+        className="absolute inset-0"
         style={{
-          backgroundImage: 'linear-gradient(rgba(230,180,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(230,180,0,0.3) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
+          background: 'linear-gradient(135deg, #00233a 0%, #003f22 42%, #00594f 76%, #0cac9f 100%)',
         }}
       />
 
-      {/* ── LARGE ANCHOR ORBS ── */}
-
-      {/* Orb 1 — amber, top-left, dominant */}
+      {/* Floating pulsing light orbs — teal/lime palette */}
       <motion.div
         className="absolute rounded-full"
         style={{
-          top: '-20%',
-          left: '-15%',
-          width: '70%',
-          height: '70%',
-          background: 'radial-gradient(circle, rgba(230,155,0,0.45) 0%, rgba(230,120,0,0.22) 40%, transparent 70%)',
-          filter: 'blur(80px)',
+          top: '-18%',
+          left: '-12%',
+          width: '58%',
+          height: '58%',
+          background: 'radial-gradient(circle, rgba(18,173,165,0.42) 0%, rgba(0,89,79,0.24) 42%, transparent 72%)',
+          filter: 'blur(95px)',
         }}
-        animate={{ x: [0, 120, 40, 0], y: [0, 60, 120, 0], scale: [1, 1.15, 0.95, 1] }}
-        transition={{ duration: 38, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ x: [0, 90, 30, 0], y: [0, 48, 100, 0], scale: [1, 1.16, 0.96, 1], opacity: [0.68, 0.98, 0.78, 0.68] }}
+        transition={{ duration: 34, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Orb 2 — deep orange, bottom-right */}
       <motion.div
         className="absolute rounded-full"
         style={{
-          bottom: '-25%',
-          right: '-15%',
-          width: '65%',
-          height: '65%',
-          background: 'radial-gradient(circle, rgba(228,114,0,0.40) 0%, rgba(230,155,0,0.18) 45%, transparent 70%)',
-          filter: 'blur(90px)',
+          bottom: '-22%',
+          right: '-14%',
+          width: '62%',
+          height: '62%',
+          background: 'radial-gradient(circle, rgba(150,238,0,0.34) 0%, rgba(101,187,153,0.22) 44%, transparent 74%)',
+          filter: 'blur(105px)',
         }}
-        animate={{ x: [0, -100, -40, 0], y: [0, -80, -130, 0], scale: [1, 1.2, 0.9, 1] }}
-        transition={{ duration: 46, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ x: [0, -92, -28, 0], y: [0, -74, -118, 0], scale: [1, 1.18, 0.94, 1], opacity: [0.54, 0.88, 0.64, 0.54] }}
+        transition={{ duration: 44, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Orb 3 — bright gold, center-right */}
       <motion.div
         className="absolute rounded-full"
         style={{
-          top: '30%',
-          right: '5%',
-          width: '45%',
-          height: '45%',
-          background: 'radial-gradient(circle, rgba(230,204,0,0.35) 0%, rgba(230,180,0,0.15) 50%, transparent 70%)',
-          filter: 'blur(100px)',
+          top: '28%',
+          right: '6%',
+          width: '42%',
+          height: '42%',
+          background: 'radial-gradient(circle, rgba(18,173,165,0.32) 0%, rgba(0,166,121,0.18) 48%, transparent 74%)',
+          filter: 'blur(110px)',
         }}
-        animate={{ x: [0, -60, 20, 0], y: [0, 90, 30, 0] }}
-        transition={{ duration: 52, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ x: [0, -48, 26, 0], y: [0, 80, 22, 0], scale: [1, 0.95, 1.12, 1], opacity: [0.48, 0.78, 0.58, 0.48] }}
+        transition={{ duration: 50, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Orb 4 — vivid amber, center-left (small but intense) */}
       <motion.div
         className="absolute rounded-full"
         style={{
-          top: '55%',
-          left: '20%',
-          width: '35%',
-          height: '35%',
-          background: 'radial-gradient(circle, rgba(232,227,55,0.30) 0%, rgba(230,180,0,0.12) 50%, transparent 70%)',
-          filter: 'blur(70px)',
+          top: '54%',
+          left: '18%',
+          width: '34%',
+          height: '34%',
+          background: 'radial-gradient(circle, rgba(236,230,151,0.24) 0%, rgba(101,187,153,0.16) 48%, transparent 72%)',
+          filter: 'blur(82px)',
         }}
-        animate={{ x: [0, 80, -20, 0], y: [0, -60, 20, 0] }}
-        transition={{ duration: 42, repeat: Infinity, ease: "easeInOut", delay: 8 }}
+        animate={{ x: [0, 74, -18, 0], y: [0, -52, 18, 0], scale: [0.96, 1.12, 1, 0.96], opacity: [0.40, 0.76, 0.52, 0.40] }}
+        transition={{ duration: 40, repeat: Infinity, ease: "easeInOut", delay: 6 }}
       />
 
-      {/* Orb 5 — orange-amber, top-center (drift) */}
       <motion.div
         className="absolute rounded-full"
         style={{
-          top: '5%',
+          top: '4%',
           left: '40%',
-          width: '30%',
-          height: '30%',
-          background: 'radial-gradient(circle, rgba(230,155,0,0.28) 0%, rgba(228,114,0,0.10) 55%, transparent 70%)',
-          filter: 'blur(60px)',
+          width: '28%',
+          height: '28%',
+          background: 'radial-gradient(circle, rgba(150,238,0,0.26) 0%, rgba(18,173,165,0.12) 55%, transparent 74%)',
+          filter: 'blur(72px)',
         }}
-        animate={{ x: [0, -40, 60, 0], y: [0, 40, 10, 0] }}
-        transition={{ duration: 35, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+        animate={{ x: [0, -36, 56, 0], y: [0, 36, 10, 0], scale: [1, 1.18, 0.98, 1], opacity: [0.38, 0.72, 0.46, 0.38] }}
+        transition={{ duration: 36, repeat: Infinity, ease: "easeInOut", delay: 3 }}
       />
 
-      {/* ── LIGHT STREAKS ── */}
-      <motion.div
-        className="absolute top-0 left-[-60%] w-[220%] h-[2px] transform -rotate-[30deg]"
-        style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(230,180,0,0.35) 50%, transparent 100%)',
-          filter: 'blur(1px)',
-        }}
-        animate={{ y: [-200, 1400] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "linear", delay: 3 }}
-      />
-      <motion.div
-        className="absolute top-0 right-[-60%] w-[220%] h-[1px] transform rotate-[25deg]"
-        style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(228,114,0,0.25) 50%, transparent 100%)',
-          filter: 'blur(1px)',
-        }}
-        animate={{ y: [-200, 1400] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "linear", delay: 9 }}
-      />
-      <motion.div
-        className="absolute top-0 left-[-30%] w-[180%] h-[1px] transform -rotate-[15deg]"
-        style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(232,227,55,0.20) 50%, transparent 100%)',
-          filter: 'blur(1px)',
-        }}
-        animate={{ y: [-200, 1400] }}
-        transition={{ duration: 22, repeat: Infinity, ease: "linear", delay: 15 }}
-      />
-
-      {/* Scanline */}
+      {/* Soft depth haze, no yellow streak/grid */}
       <div
-        className="absolute inset-0 opacity-[0.025] mix-blend-overlay"
+        className="absolute inset-0 opacity-60"
+        style={{
+          background: 'radial-gradient(circle at 50% 42%, rgba(0,35,58,0) 0%, rgba(0,20,24,0.28) 54%, rgba(0,0,0,0.52) 100%)',
+        }}
+      />
+
+      <div
+        className="absolute inset-0 opacity-[0.018] mix-blend-overlay"
         style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)',
-          backgroundSize: '100% 4px'
+          backgroundSize: '100% 4px',
         }}
       />
     </div>
