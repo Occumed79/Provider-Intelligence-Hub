@@ -42,8 +42,17 @@ app.get("/", (_req, res) => {
     app: "Provider Intelligence Hub API",
     status: "ok",
     health: "/api/healthz",
+    keepAwake: "/api/health",
     statusCheck: "/api/status",
   });
+});
+
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ ok: true, service: "provider-intelligence-hub", awake: true });
+});
+
+app.head("/api/health", (_req, res) => {
+  res.status(200).end();
 });
 
 app.use("/api", router);
