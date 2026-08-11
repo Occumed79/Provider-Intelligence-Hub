@@ -1,0 +1,24 @@
+const uniformBlock = `\
+layout(std140) uniform flowLinesUniforms {
+  vec4 outlineColor;
+  float thicknessUnit;
+  float outlineThickness;
+  float drawOutline;
+  float gap;
+  float curviness;
+} flowLines;
+`;
+export const flowLinesUniforms = {
+    name: 'flowLines',
+    vs: uniformBlock,
+    fs: uniformBlock,
+    uniformTypes: {
+        outlineColor: 'vec4<f32>',
+        thicknessUnit: 'f32',
+        outlineThickness: 'f32',
+        drawOutline: 'f32',
+        gap: 'f32',
+        curviness: 'f32',
+    },
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiRmxvd0xpbmVzTGF5ZXJVbmlmb3Jtcy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9GbG93TGluZXNMYXllci9GbG93TGluZXNMYXllclVuaWZvcm1zLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUVBLE1BQU0sWUFBWSxHQUFHOzs7Ozs7Ozs7Q0FTcEIsQ0FBQztBQVdGLE1BQU0sQ0FBQyxNQUFNLGlCQUFpQixHQUFHO0lBQy9CLElBQUksRUFBRSxXQUFXO0lBQ2pCLEVBQUUsRUFBRSxZQUFZO0lBQ2hCLEVBQUUsRUFBRSxZQUFZO0lBQ2hCLFlBQVksRUFBRTtRQUNaLFlBQVksRUFBRSxXQUFXO1FBQ3pCLGFBQWEsRUFBRSxLQUFLO1FBQ3BCLGdCQUFnQixFQUFFLEtBQUs7UUFDdkIsV0FBVyxFQUFFLEtBQUs7UUFDbEIsR0FBRyxFQUFFLEtBQUs7UUFDVixTQUFTLEVBQUUsS0FBSztLQUNqQjtDQUM4QyxDQUFDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHR5cGUge1NoYWRlck1vZHVsZX0gZnJvbSAnQGx1bWEuZ2wvc2hhZGVydG9vbHMnO1xuXG5jb25zdCB1bmlmb3JtQmxvY2sgPSBgXFxcbmxheW91dChzdGQxNDApIHVuaWZvcm0gZmxvd0xpbmVzVW5pZm9ybXMge1xuICB2ZWM0IG91dGxpbmVDb2xvcjtcbiAgZmxvYXQgdGhpY2tuZXNzVW5pdDtcbiAgZmxvYXQgb3V0bGluZVRoaWNrbmVzcztcbiAgZmxvYXQgZHJhd091dGxpbmU7XG4gIGZsb2F0IGdhcDtcbiAgZmxvYXQgY3VydmluZXNzO1xufSBmbG93TGluZXM7XG5gO1xuXG5leHBvcnQgdHlwZSBGbG93TGluZXNQcm9wcyA9IHtcbiAgb3V0bGluZUNvbG9yOiBbbnVtYmVyLCBudW1iZXIsIG51bWJlciwgbnVtYmVyXTtcbiAgdGhpY2tuZXNzVW5pdDogbnVtYmVyO1xuICBvdXRsaW5lVGhpY2tuZXNzOiBudW1iZXI7XG4gIGRyYXdPdXRsaW5lOiBudW1iZXI7XG4gIGdhcDogbnVtYmVyO1xuICBjdXJ2aW5lc3M6IG51bWJlcjtcbn07XG5cbmV4cG9ydCBjb25zdCBmbG93TGluZXNVbmlmb3JtcyA9IHtcbiAgbmFtZTogJ2Zsb3dMaW5lcycsXG4gIHZzOiB1bmlmb3JtQmxvY2ssXG4gIGZzOiB1bmlmb3JtQmxvY2ssXG4gIHVuaWZvcm1UeXBlczoge1xuICAgIG91dGxpbmVDb2xvcjogJ3ZlYzQ8ZjMyPicsXG4gICAgdGhpY2tuZXNzVW5pdDogJ2YzMicsXG4gICAgb3V0bGluZVRoaWNrbmVzczogJ2YzMicsXG4gICAgZHJhd091dGxpbmU6ICdmMzInLFxuICAgIGdhcDogJ2YzMicsXG4gICAgY3VydmluZXNzOiAnZjMyJyxcbiAgfSxcbn0gYXMgY29uc3Qgc2F0aXNmaWVzIFNoYWRlck1vZHVsZTxGbG93TGluZXNQcm9wcz47XG4iXX0=

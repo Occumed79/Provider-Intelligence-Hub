@@ -1,0 +1,50 @@
+import { Line } from '../line';
+import { Curve } from '../curve';
+import { Point, PointOptions } from '../point';
+import { Segment } from './segment';
+export declare class MoveTo extends Segment {
+    static create(line: Line): MoveTo;
+    static create(curve: Curve): MoveTo;
+    static create(point: PointOptions): MoveTo;
+    static create(x: number, y: number): MoveTo;
+    static create(point: PointOptions, ...points: PointOptions[]): Segment[];
+    static create(x: number, y: number, ...coords: number[]): Segment[];
+    constructor(line: Line);
+    constructor(curve: Curve);
+    constructor(x: number, y: number);
+    constructor(p: PointOptions);
+    get start(): Point;
+    get type(): string;
+    bbox(): any;
+    closestPoint(): Point;
+    closestPointLength(): number;
+    closestPointNormalizedLength(): number;
+    closestPointT(): number;
+    closestPointTangent(): any;
+    length(): number;
+    lengthAtT(): number;
+    divideAt(): [Segment, Segment];
+    divideAtLength(): [Segment, Segment];
+    getSubdivisions(): any[];
+    pointAt(): Point;
+    pointAtLength(): Point;
+    pointAtT(): Point;
+    tangentAt(): any;
+    tangentAtLength(): any;
+    tangentAtT(): any;
+    isDifferentiable(): boolean;
+    scale(sx: number, sy: number, origin?: PointOptions): this;
+    rotate(angle: number, origin?: PointOptions): this;
+    translate(tx: number, ty: number): this;
+    translate(p: PointOptions): this;
+    clone(): MoveTo;
+    equals(s: Segment): boolean;
+    toJSON(): {
+        type: string;
+        end: {
+            x: number;
+            y: number;
+        };
+    };
+    serialize(): string;
+}

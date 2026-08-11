@@ -1,0 +1,1 @@
+{"version":3,"file":"prePassRenderer.js","sourceRoot":"","sources":["../../../../dev/core/src/Rendering/prePassRenderer.ts"],"names":[],"mappings":"AAAA,cAAc,wBAAwB,CAAC","sourcesContent":["export * from \"./prePassRenderer.pure\";\n"]}

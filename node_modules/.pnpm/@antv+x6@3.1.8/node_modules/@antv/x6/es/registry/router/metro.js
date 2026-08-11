@@ -1,0 +1,58 @@
+import { FunctionExt } from '../../common';
+import { Line, normalize, Point, toRad } from '../../geometry';
+import { manhattan } from './manhattan/index';
+import { resolve, } from './manhattan/options';
+const defaults = {
+    maxDirectionChange: 45,
+    // an array of directions to find next points on the route
+    // different from start/end directions
+    directions() {
+        const step = resolve(this.step, this);
+        const cost = resolve(this.cost, this);
+        const diagonalCost = Math.ceil(Math.sqrt((step * step) << 1)); // eslint-disable-line no-bitwise
+        return [
+            { cost, offsetX: step, offsetY: 0 },
+            { cost: diagonalCost, offsetX: step, offsetY: step },
+            { cost, offsetX: 0, offsetY: step },
+            { cost: diagonalCost, offsetX: -step, offsetY: step },
+            { cost, offsetX: -step, offsetY: 0 },
+            { cost: diagonalCost, offsetX: -step, offsetY: -step },
+            { cost, offsetX: 0, offsetY: -step },
+            { cost: diagonalCost, offsetX: step, offsetY: -step },
+        ];
+    },
+    fallbackRoute: metroFallbackRoute,
+};
+function metroFallbackRoute(from, to, options) {
+    const theta = from.theta(to);
+    const route = [];
+    let a = { x: to.x, y: from.y };
+    let b = { x: from.x, y: to.y };
+    if (theta % 180 > 90) {
+        const t = a;
+        a = b;
+        b = t;
+    }
+    const p1 = theta % 90 < 45 ? a : b;
+    const l1 = new Line(from, p1);
+    const alpha = 90 * Math.ceil(theta / 90);
+    const p2 = Point.fromPolar(l1.squaredLength(), toRad(alpha + 135), p1);
+    const l2 = new Line(to, p2);
+    const intersectionPoint = l1.intersectsWithLine(l2);
+    const directionFrom = intersectionPoint || from;
+    const quadrant = 360 / options.directions.length;
+    const angleTheta = directionFrom.theta(to);
+    const normalizedAngle = normalize(angleTheta + quadrant / 2);
+    const directionAngle = quadrant * Math.floor(normalizedAngle / quadrant);
+    options.previousDirectionAngle = directionAngle;
+    if (intersectionPoint &&
+        !intersectionPoint.equals(from) &&
+        !intersectionPoint.equals(to)) {
+        route.push(intersectionPoint.round());
+    }
+    return route;
+}
+export const metro = function (vertices, options, linkView) {
+    return FunctionExt.call(manhattan, this, vertices, Object.assign(Object.assign({}, defaults), options), linkView);
+};
+//# sourceMappingURL=metro.js.map

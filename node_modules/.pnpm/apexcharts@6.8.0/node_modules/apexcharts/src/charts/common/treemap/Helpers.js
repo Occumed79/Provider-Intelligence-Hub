@@ -1,0 +1,226 @@
+// @ts-check
+import Utils from '../../../utils/Utils'
+import Graphics from '../../../modules/Graphics'
+import DataLabels from '../../../modules/DataLabels'
+import { resolveDataLabelOffset } from '../../../modules/helpers/DataLabelOffset'
+
+export default class TreemapHelpers {
+  /**
+   * @param {import('../../../types/internal').ChartStateW} w
+   * @param {import('../../../types/internal').ChartContext} ctx
+   */
+  constructor(w, ctx) {
+    this.ctx = ctx
+    this.w = w
+  }
+
+  checkColorRange() {
+    const w = this.w
+
+    let negRange = false
+    const chartOpts = w.config.plotOptions[w.config.chart.type]
+
+    if (chartOpts.colorScale.ranges.length > 0) {
+      /**
+       * @param {number} range
+       */
+      chartOpts.colorScale.ranges.map((/** @type {any} */ range) => {
+        if (range.from <= 0) {
+          negRange = true
+        }
+      })
+    }
+    return negRange
+  }
+
+  /**
+   * @param {string} chartType
+   * @param {number} i
+   * @param {number} j
+   * @param {any} negRange
+   */
+  getShadeColor(chartType, i, j, negRange) {
+    const w = this.w
+
+    let colorShadePercent = 1
+    const shadeIntensity = w.config.plotOptions[chartType].shadeIntensity
+
+    const colorProps = this.determineColor(chartType, i, j)
+
+    if (/** @type {any} */ (w.globals).hasNegs || negRange) {
+      if (w.config.plotOptions[chartType].reverseNegativeShade) {
+        if (colorProps.percent < 0) {
+          colorShadePercent =
+            (colorProps.percent / 100) * (shadeIntensity * 1.25)
+        } else {
+          colorShadePercent =
+            (1 - colorProps.percent / 100) * (shadeIntensity * 1.25)
+        }
+      } else {
+        if (colorProps.percent <= 0) {
+          colorShadePercent =
+            1 - (1 + colorProps.percent / 100) * shadeIntensity
+        } else {
+          colorShadePercent = (1 - colorProps.percent / 100) * shadeIntensity
+        }
+      }
+    } else {
+      colorShadePercent = 1 - colorProps.percent / 100
+      if (chartType === 'treemap') {
+        colorShadePercent =
+          (1 - colorProps.percent / 100) * (shadeIntensity * 1.25)
+      }
+    }
+
+    let color = colorProps.color
+    const utils = new Utils()
+
+    if (w.config.plotOptions[chartType].enableShades) {
+      // The shadeColor function may return either an RGB or a hex color value
+      // However, hexToRgba requires the input to be in hex format
+      // The ternary operator checks if the color is in RGB format, and if so, converts it to hex
+      if (this.w.config.theme.mode === 'dark') {
+        const shadeColor = utils.shadeColor(
+          colorShadePercent * -1,
+          colorProps.color,
+        )
+        color = Utils.hexToRgba(
+          Utils.isColorHex(shadeColor) ? shadeColor : Utils.rgb2hex(shadeColor),
+          w.config.fill.opacity,
+        )
+      } else {
+        const shadeColor = utils.shadeColor(colorShadePercent, colorProps.color)
+        color = Utils.hexToRgba(
+          Utils.isColorHex(shadeColor) ? shadeColor : Utils.rgb2hex(shadeColor),
+          w.config.fill.opacity,
+        )
+      }
+    }
+
+    return { color, colorProps }
+  }
+
+  /**
+   * @param {string} chartType
+   * @param {number} i
+   * @param {number} j
+   */
+  determineColor(chartType, i, j) {
+    const w = this.w
+
+    const val = w.seriesData.series[i][j]
+
+    const chartOpts = w.config.plotOptions[chartType]
+
+    let seriesNumber = chartOpts.colorScale.inverse ? j : i
+
+    if (chartOpts.distributed && w.config.chart.type === 'treemap') {
+      seriesNumber = j
+    }
+
+    let color = w.globals.colors[seriesNumber]
+    let foreColor = null
+    let min
+    let max
+
+    if (!chartOpts.distributed && chartType === 'heatmap') {
+      // Non-distributed heatmap uses the global y-extent; the per-row min/max
+      // below would only be computed and immediately discarded.
+      min = w.globals.minY
+      max = w.globals.maxY
+    } else {
+      // Per-row extent (distributed heatmap / treemap). Use a loop, not
+      // Math.min(...row): a wide continuous-X heatmap row can exceed the call
+      // argument limit and throw "RangeError: Maximum call stack size exceeded".
+      const row = w.seriesData.series[i]
+      min = row.length ? row[0] : 0
+      max = min
+      for (let k = 1; k < row.length; k++) {
+        if (row[k] < min) min = row[k]
+        if (row[k] > max) max = row[k]
+      }
+    }
+
+    if (typeof chartOpts.colorScale.min !== 'undefined') {
+      min =
+        chartOpts.colorScale.min < w.globals.minY
+          ? chartOpts.colorScale.min
+          : w.globals.minY
+      max =
+        chartOpts.colorScale.max > w.globals.maxY
+          ? chartOpts.colorScale.max
+          : w.globals.maxY
+    }
+
+    const total = Math.abs(max) + Math.abs(min)
+
+    // When min === max (total === 0), every cell sits at the midpoint of the
+    // scale. Use a tiny positive epsilon so percent → 0 instead of exploding
+    // to a large negative number (the previous `total - 0.000001` fallback
+    // produced a negative divisor).
+    let percent = total === 0 ? 0 : (100 * val) / total
+
+    if (chartOpts.colorScale.ranges.length > 0) {
+      const colorRange = chartOpts.colorScale.ranges
+      /**
+       * @param {number} range
+       */
+      colorRange.map((/** @type {any} */ range) => {
+        if (val >= range.from && val <= range.to) {
+          color = range.color
+          foreColor = range.foreColor ? range.foreColor : null
+          min = range.from
+          max = range.to
+          const rTotal = Math.abs(max) + Math.abs(min)
+          percent = rTotal === 0 ? 0 : (100 * val) / rTotal
+        }
+      })
+    }
+
+    return {
+      color,
+      foreColor,
+      percent,
+    }
+  }
+
+  /** @param {{ text?: any, x?: any, y?: any, i?: any, j?: any, colorProps?: any, fontSize?: any, series?: any }} opts */
+  calculateDataLabels({ text, x, y, i, j, colorProps, fontSize }) {
+    const w = this.w
+    const dataLabelsConfig = w.config.dataLabels
+
+    const graphics = new Graphics(this.w)
+
+    const dataLabels = new DataLabels(this.w, this.ctx)
+
+    let elDataLabelsWrap = null
+
+    if (dataLabelsConfig.enabled) {
+      elDataLabelsWrap = graphics.group({
+        class: 'apexcharts-data-labels',
+      })
+
+      // offsets may be a function evaluated per data point
+      const offX = resolveDataLabelOffset(dataLabelsConfig.offsetX, w, i, j)
+      const offY = resolveDataLabelOffset(dataLabelsConfig.offsetY, w, i, j)
+
+      const dataLabelsX = x + offX
+      const dataLabelsY =
+        y + parseFloat(dataLabelsConfig.style.fontSize) / 3 + offY
+
+      dataLabels.plotDataLabelsText({
+        x: dataLabelsX,
+        y: dataLabelsY,
+        text,
+        i,
+        j,
+        color: colorProps.foreColor,
+        parent: elDataLabelsWrap,
+        fontSize,
+        dataLabelsConfig,
+      })
+    }
+
+    return elDataLabelsWrap
+  }
+}

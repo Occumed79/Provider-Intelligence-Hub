@@ -1,0 +1,20 @@
+import { createElement as h } from 'preact/compat';
+import { BaseNodeModel, BaseEdgeModel } from '../../model';
+export type ITextProps = {
+    x: number;
+    y: number;
+    value: string;
+    fontSize?: number;
+    fill?: string;
+    overflowMode?: 'default' | 'autoWrap' | 'ellipsis';
+    textWidth?: number;
+    lineHeight?: number;
+    fontFamily?: string | null;
+    wrapPadding?: string | number | null;
+    model: BaseNodeModel | BaseEdgeModel;
+    [key: string]: any;
+};
+export type ForeignObjectPropsType = 'string | number | SignalLike<string | number | undefined> | undefined';
+export declare function Text(props: ITextProps): h.JSX.Element | null;
+export declare function renderHtmlText(props: ITextProps): h.JSX.Element;
+export default Text;

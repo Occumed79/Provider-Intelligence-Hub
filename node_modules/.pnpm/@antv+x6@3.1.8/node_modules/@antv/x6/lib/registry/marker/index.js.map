@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/registry/marker/index.ts"],"names":[],"mappings":";;;;AAEA,0CAAsC;AACtC,wDAAiC;AACjC,iCAAqD;AAiCrD,MAAM,OAAO,GAAG,OAAO,CAAA;AAEV,QAAA,cAAc,GAAG,mBAAQ,CAAC,MAAM,CAAyB;IACpE,IAAI,EAAE,QAAQ;CACf,CAAC,CAAA;AACF,sBAAc,CAAC,QAAQ,CAAC,OAAO,EAAE,IAAI,CAAC,CAAA;AAEzB,QAAA,eAAe,GAAG,gBAAe,CAAA"}

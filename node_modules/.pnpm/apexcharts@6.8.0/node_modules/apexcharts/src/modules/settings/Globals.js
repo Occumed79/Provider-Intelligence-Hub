@@ -1,0 +1,590 @@
+// @ts-check
+import Utils from './../../utils/Utils'
+import {
+  LINE_HEIGHT_RATIO,
+  NICE_SCALE_ALLOWED_MAG_MSD,
+  NICE_SCALE_DEFAULT_TICKS,
+} from '../../utils/Constants'
+
+export default class Globals {
+  /**
+   * @param {any} gl
+   */
+  initGlobalVars(gl) {
+    // ── Series data (ephemeral — fully recomputed from config.series each render) ──
+    gl.series = [] // the MAIN series array (y values)
+    gl.seriesCandleO = []
+    gl.seriesCandleH = []
+    gl.seriesCandleM = []
+    gl.seriesCandleL = []
+    gl.seriesCandleC = []
+    gl.seriesRangeStart = []
+    gl.seriesRangeEnd = []
+    gl.seriesRange = []
+    gl.seriesPercent = []
+    gl.seriesGoals = []
+    gl.seriesX = []
+    gl.seriesZ = []
+    gl.seriesNames = []
+    gl.seriesTotals = []
+    gl.seriesLog = []
+    gl.seriesColors = []
+    gl.stackedSeriesTotals = []
+    gl.seriesXvalues = [] // x positions used by tooltip when x values are unequal
+    gl.seriesYvalues = [] // y positions used to identify which series the user hovered
+    gl.dataWasParsed = false
+    gl.originalSeries = null
+    gl.maxValsInArrayIndex = 0 // index of the series with the most data points
+    gl.yValueDecimal = 0 // decimal precision of y values (0 = integers only)
+    gl.allSeriesHasEqualX = true // false when series have differing x value sets
+    // Recomputed every render (Range flips hasNullValues, Scales flips
+    // invalidLogScale). Reset here, not only once in globalVars, or a chart that
+    // once had nulls / an invalid log scale keeps behaving as if it still does
+    // after updateSeries swaps in clean / valid data.
+    gl.hasNullValues = false
+    gl.invalidLogScale = false
+
+    // Per-point range ids for timeline rangeBar overlap offsets, keyed
+    // [seriesIndex][pointIndex]. Populated by Data.handleRangeDataFormat and
+    // read by RangeBar; reset each render so stale ids don't survive an update
+    // that drops range data. See audit D1.
+    gl.seriesRangeName = {}
+
+    // ── Labels & categories (ephemeral — derived from parsed series/config) ──
+    gl.labels = []
+    gl.hasXaxisGroups = false
+    gl.groups = []
+    gl.barGroups = []
+    gl.lineGroups = []
+    gl.areaGroups = []
+    gl.hasSeriesGroups = false
+    gl.seriesGroups = []
+    gl.categoryLabels = []
+    gl.timescaleLabels = []
+    gl.noLabelsProvided = false
+
+    // ── Axis bounds & scales (ephemeral — recomputed by Range/Scales each render) ──
+    gl.isXNumeric = false
+    gl.skipLastTimelinelabel = false
+    gl.skipFirstTimelinelabel = false
+    gl.isDataXYZ = false
+    gl.isMultiLineX = false
+    gl.isMultipleYAxis = false
+    gl.maxY = -Number.MAX_VALUE
+    gl.minY = Number.MIN_VALUE
+    gl.minYArr = []
+    gl.maxYArr = []
+    gl.maxX = -Number.MAX_VALUE
+    gl.minX = Number.MAX_VALUE
+    gl.initialMaxX = -Number.MAX_VALUE
+    gl.initialMinX = Number.MAX_VALUE
+    gl.maxDate = 0
+    gl.minDate = Number.MAX_VALUE
+    gl.minZ = Number.MAX_VALUE
+    gl.maxZ = -Number.MAX_VALUE
+    gl.minXDiff = Number.MAX_VALUE
+    gl.yAxisScale = []
+    gl.xAxisScale = null
+    gl.xAxisTicksPositions = []
+    gl.xRange = 0
+    gl.yRange = []
+    gl.zRange = 0
+    gl.dataPoints = 0
+    gl.xTickAmount = 0
+    gl.multiAxisTickAmount = 0
+
+    // ── Zoom / timeline range state (ephemeral — recomputed by TimeScale) ──
+    gl.disableZoomIn = false
+    gl.disableZoomOut = false
+
+    // ── Layout & dimensions (ephemeral — recomputed by Dimensions each render) ──
+    gl.yLabelsCoords = []
+    gl.yTitleCoords = []
+    gl.barPadForNumericAxis = 0
+    gl.padHorizontal = 0
+    gl.rotateXLabels = false // true when x-axis labels are angled
+    gl.overlappingXLabels = false // true when x labels overlap and must be hidden
+    gl.radialSize = 0 // computed radius for radial/polar charts
+    // Note: formatter properties (xLabelFormatter, yLabelFormatters, etc.) live on
+    // w.formatters — not on gl. See Base.js for backward-compat shims.
+
+    // ── Bar chart sizing (ephemeral — set by bar/Helpers.initialPositions) ──
+    gl.barHeight = 0
+    gl.barWidth = 0
+
+    // ── Animation (ephemeral — reset at the start of each render pass) ──
+    gl.animationEnded = false
+    // Set true by Destroy.clear() on a real destroy(). Deferred work scheduled
+    // before teardown (rAF animation callbacks) checks this and bails, so a
+    // chart torn down mid-render (e.g. React StrictMode double-mount) can't
+    // touch its now-cleared DOM. Reset here so a re-render re-arms animations.
+    gl.isDestroyed = false
+    // Guards the single rAF that reveals a large-dataset bulk render (see
+    // Animations.revealBulk). Re-armed each render so updates fade in too.
+    gl.bulkRevealScheduled = false
+
+    // ── Caches (ephemeral — cleared so stale DOM refs/measurements don't persist) ──
+    gl.resizeTimer = null
+    gl.selectionResizeTimer = null
+    gl.delayedElements = []
+    gl.pointsArray = []
+    gl.barCanvasCoords = null // Strata (#2): per-render bar/candle center cache (canvas tooltip position)
+    gl.activeRenderer = null // Strata (#2): active renderer handle for w-only modules (Series restyle); set by RendererController.resolve()
+    gl.dataLabelsRects = []
+    gl.lastDrawnDataLabelsIndexes = [] // tracks which data labels were drawn per series to prevent collisions
+    gl.textRectsCache = new Map()
+    gl.domCache = new Map()
+    gl.dimensionCache = {} // cache for getBoundingClientRect results
+    gl.cachedSelectors = {} // cache for querySelectorAll results
+
+    // Attach namespace views the first time only — live proxies into the flat
+    // globals above. initGlobalVars is called again on resetGlobals (each
+    // updateSeries), so we guard against re-attaching.
+    if (!gl.seriesNS) {
+      this._attachNamespaces(gl)
+    }
+  }
+
+  /**
+   * Attach domain-grouped namespace sub-objects onto gl.
+   * Each sub-object is a plain object whose properties are defined as
+   * getters/setters that read/write the canonical flat properties on gl.
+   * This means there is exactly ONE storage location per value — no copies,
+   * no sync needed.
+   *
+   * Namespaces:
+   *   gl.series  — parsed series data and chart-type-specific arrays
+   *   gl.axes    — axis bounds, scales, ranges, tick state
+   *   gl.layout  — SVG/grid dimensions, translations, label sizes
+   *   gl.cache   — DOM caches, timers, observers, drawing scratch space
+   *
+   * Note: interact state lives on w.interact (not gl) — see Base.js.
+   * @param {any} gl
+   */
+  _attachNamespaces(gl) {
+    // Helper: define a property on `ns` that proxies to `gl[key]`
+    /**
+     * @param {any} ns
+     * @param {string} key
+     */
+    const proxy = (ns, key, nsKey = key) => {
+      Object.defineProperty(ns, nsKey, {
+        get() {
+          return gl[key]
+        },
+        set(v) {
+          gl[key] = v
+        },
+        enumerable: true,
+        configurable: true,
+      })
+    }
+
+    // ── series namespace ─────────────────────────────────────────────────────
+    // All parsed/computed series data. Chart-type-specific arrays included so
+    // one namespace covers all chart types.
+    // Note: `gl.series` (the main y-values array) is exposed here as `seriesNS.data`
+    // to avoid a circular proxy. All other series-prefixed fields are proxied by name.
+    const seriesNS = {}
+    // Alias gl.series → seriesNS.data
+    proxy(seriesNS, 'series', 'data')
+    for (const key of [
+      'seriesNames',
+      'seriesX',
+      'seriesZ',
+      'seriesXvalues',
+      'seriesYvalues',
+      'seriesGoals',
+      'seriesLog',
+      'seriesColors',
+      'seriesPercent',
+      'seriesTotals',
+      'stackedSeriesTotals',
+      'seriesCandleO',
+      'seriesCandleH',
+      'seriesCandleM',
+      'seriesCandleL',
+      'seriesCandleC',
+      'seriesRangeStart',
+      'seriesRangeEnd',
+      'seriesRange',
+      'seriesYAxisMap',
+      'seriesYAxisReverseMap',
+      'seriesGroups',
+      'barGroups',
+      'lineGroups',
+      'areaGroups',
+      'originalSeries',
+      'collapsedSeries',
+      'collapsedSeriesIndices',
+      'ancillaryCollapsedSeries',
+      'ancillaryCollapsedSeriesIndices',
+      'allSeriesCollapsed',
+      'risingSeries',
+      'previousPaths',
+      'ignoreYAxisIndexes',
+      'labels',
+      'categoryLabels',
+      'timescaleLabels',
+      'groups',
+    ]) {
+      proxy(seriesNS, key)
+    }
+    // Expose the namespace under a non-colliding key.
+    // gl.series still refers to the series data array (unchanged).
+    // gl.seriesNS groups all series-related fields.
+    Object.defineProperty(gl, 'seriesNS', {
+      value: seriesNS,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
+    // ── axes namespace ───────────────────────────────────────────────────────
+    // Axis bounds, scale objects, range/tick state updated each render.
+    const axesNS = {}
+    for (const key of [
+      'minX',
+      'maxX',
+      'initialMinX',
+      'initialMaxX',
+      'minY',
+      'maxY',
+      'minYArr',
+      'maxYArr',
+      'minZ',
+      'maxZ',
+      'minDate',
+      'maxDate',
+      'minXDiff',
+      'xRange',
+      'yRange',
+      'zRange',
+      'xAxisScale',
+      'yAxisScale',
+      'xAxisTicksPositions',
+      'xTickAmount',
+      'multiAxisTickAmount',
+      'dataPoints',
+      'maxValsInArrayIndex',
+      'isXNumeric',
+      'isMultipleYAxis',
+      'isMultiLineX',
+      'isDataXYZ',
+      'dataFormatXNumeric',
+      'allSeriesHasEqualX',
+      'hasNullValues',
+      'dataWasParsed',
+      'hasXaxisGroups',
+      'hasSeriesGroups',
+      'skipFirstTimelinelabel',
+      'skipLastTimelinelabel',
+      'yValueDecimal',
+      'invalidLogScale',
+      'noLabelsProvided',
+    ]) {
+      proxy(axesNS, key)
+    }
+    Object.defineProperty(gl, 'axes', {
+      value: axesNS,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
+    // ── layout namespace ─────────────────────────────────────────────────────
+    // SVG and grid dimensions, translations, label/axis sizing.
+    const layoutNS = {}
+    for (const key of [
+      'svgWidth',
+      'svgHeight',
+      'gridWidth',
+      'gridHeight',
+      'translateX',
+      'translateY',
+      'translateXAxisX',
+      'translateXAxisY',
+      'translateYAxisX',
+      'xAxisLabelsHeight',
+      'xAxisGroupLabelsHeight',
+      'xAxisLabelsWidth',
+      'yAxisLabelsWidth',
+      'yAxisWidths',
+      'yLabelsCoords',
+      'yTitleCoords',
+      'padHorizontal',
+      'barPadForNumericAxis',
+      'rotateXLabels',
+      'scaleX',
+      'scaleY',
+      'radialSize',
+      'defaultLabels',
+      'overlappingXLabels',
+    ]) {
+      proxy(layoutNS, key)
+    }
+    Object.defineProperty(gl, 'layout', {
+      value: layoutNS,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+
+    // Note: interact namespace (zoom/pan/selection/mouse state) lives on w.interact
+    // — see Base.js. Backward-compat shims proxy gl.* → w.interact.*.
+
+    // ── cache namespace ──────────────────────────────────────────────────────
+    // Internal caches, timers, observers, drawing scratch arrays.
+    // These are never part of the public API surface.
+    const cacheNS = {}
+    for (const key of [
+      'domCache',
+      'dimensionCache',
+      'cachedSelectors',
+      'textRectsCache',
+      'pointsArray',
+      'dataLabelsRects',
+      'lastDrawnDataLabelsIndexes',
+      'delayedElements',
+      'resizeTimer',
+      'selectionResizeTimer',
+      'resizeObserver',
+    ]) {
+      proxy(cacheNS, key)
+    }
+    Object.defineProperty(gl, 'cache', {
+      value: cacheNS,
+      writable: false,
+      enumerable: false,
+      configurable: true,
+    })
+  }
+
+  /**
+   * Persistent chart state — set ONCE at chart construction and intentionally NOT
+   * reset by initGlobalVars.  These values must survive updateSeries / re-render.
+   *
+   * Rule: if a value is recalculated fresh on every render it belongs in
+   * initGlobalVars instead, not here.
+   * @returns {import('../../types/internal').ChartGlobals}
+   * @param {Record<string, any>} config
+   */
+  globalVars(config) {
+    const globals = {
+      // ── Identity (set once, never changes) ───────────────────────────────────
+      chartID: null, // full chart ID: "apexcharts-<cuid>"
+      cuid: null, // random suffix only
+
+      // ── Event registry (accumulates listeners, never reset) ───────────────────
+      events: {
+        beforeMount: [],
+        mounted: [],
+        updated: [],
+        clicked: [],
+        selection: [],
+        dataPointSelection: [],
+        zoomed: [],
+        scrolled: [],
+      },
+
+      // ── Theme colors (set by Theme module after config merge) ─────────────────
+      colors: [],
+      fill: { colors: [] },
+
+      // ── Animation-frame handles cancellable across re-renders ─────────────────
+      // The chart-type instances that own these loops (Radial needle, Unit
+      // gather/exit) are recreated every render, so the handle lives here: a new
+      // render cancels the previous render's loop before starting its own,
+      // instead of leaving it to animate detached nodes. NOT reset per render.
+      radialNeedleRAF: null,
+      unitGatherRAF: null,
+      unitExitRAF: null,
+      stroke: { colors: [] },
+      dataLabels: { style: { colors: [] } },
+      radarPolygons: { fill: { colors: [] } },
+      markers: {
+        colors: [],
+        size: config.markers.size,
+        largestSize: 0,
+      },
+
+      // ── Device / environment detected once at startup ─────────────────────────
+      // Note: isTouchDevice lives on w.interact — see Base.js. Shim installed there.
+      LINE_HEIGHT_RATIO,
+
+      // ── Chart-type flags (derived from config, set during Core.mount) ─────────
+      axisCharts: true, // false for pie/radial/treemap etc.
+      isSlopeChart: config.plotOptions.line.isSlopeChart,
+      comboCharts: false, // true when mixing line + column series
+
+      // ── Config snapshots (backups for zoom-reset / updateOptions) ────────────
+      initialConfig: null, // deep clone of the original user config
+      initialSeries: [],
+      lastXAxis: [],
+      lastYAxis: [],
+
+      // ── User interaction state (must survive re-renders) ──────────────────────
+      // Note: zoomEnabled, panEnabled, selectionEnabled, zoomed, selection,
+      //       visibleXRange, selectedDataPoints, mousedown, clientX, clientY,
+      //       lastClientPosition, capturedSeriesIndex, capturedDataPointIndex,
+      //       disableZoomIn, disableZoomOut, isTouchDevice
+      //       live on w.interact — see Base.js. Backward-compat shims installed there.
+
+      // Series collapse state (user-driven, must persist across re-renders)
+      allSeriesCollapsed: false,
+      collapsedSeries: [],
+      collapsedSeriesIndices: [],
+      ancillaryCollapsedSeries: [],
+      ancillaryCollapsedSeriesIndices: [],
+      risingSeries: [], // series being re-shown after collapse
+      ignoreYAxisIndexes: [], // y-axis indices excluded during series collapse
+
+      // ── Lifecycle / update flags ──────────────────────────────────────────────
+      isDirty: false, // true when user called an update method manually
+      isExecCalled: false, // true when update came via exec()
+      dataChanged: false, // true when series data was changed dynamically
+      resized: false, // true after a container resize
+
+      // ── Data format flags (derived from config/series, stable between renders) ─
+      // Note: dataFormatXNumeric lives on w.axisFlags — see Base.js. Shim installed there.
+      // hasNullValues / invalidLogScale are recomputed every render and reset in
+      // initGlobalVars (they are NOT stable between renders).
+
+      // Persistent data tracking
+      columnSeries: null, // tracks which series are rendered as bars/columns
+      yaxis: null, // resolved yaxis config array
+      total: 0, // running total (used by pie/radial)
+
+      // ── Animation control ─────────────────────────────────────────────────────
+      shouldAnimate: true,
+      previousPaths: [], // paths from previous render — source for enter animation
+      // Streaming scroll: previous frame's parsed rows + pixel positions,
+      // captured by Series.getPreviousPaths(). Consulted (like previousPaths)
+      // only while a data-change morph renders. See StreamScroll.
+      prevStreamFrame: null,
+      // Axis-chrome snapshot (tick label texts/positions + gridline positions)
+      // captured alongside prevStreamFrame; consumed once by AxisTransition
+      // after a variable-length re-render mounts.
+      prevChromeFrame: null,
+
+      // ── SVG viewport (set by Dimensions, but persistent as layout anchor) ─────
+      svgWidth: 0,
+      svgHeight: 0,
+      // Fingerprint of the container inputs that fed the last rendered size, so
+      // the window-resize handler can skip a redraw (and the animation teardown
+      // it causes) when a resize does not change the chart's drawing box.
+      lastResizeSignature: null,
+      // Note: gridWidth, gridHeight, translateX, translateY, translateXAxisX,
+      // translateXAxisY, xAxisLabelsHeight, xAxisGroupLabelsHeight, xAxisLabelsWidth,
+      // rotateXLabels, xAxisHeight, yLabelsCoords, yTitleCoords live on w.layout —
+      // see Base.js. Backward-compat shims installed there.
+      defaultLabels: false,
+      // Note: formatter properties (xLabelFormatter, yLabelFormatters, etc.) live on
+      // w.formatters — see Base.js. Backward-compat shims installed there.
+      yAxisLabelsWidth: 0,
+      scaleX: 1,
+      scaleY: 1,
+      translateYAxisX: [],
+      yAxisWidths: [],
+
+      // ── Instances (created once, replaced only on full re-init) ──────────────
+      tooltip: null,
+      resizeObserver: null,
+
+      // ── Locale (loaded once; changes only via setLocale()) ───────────────────
+      locale: {},
+
+      // ── Method queue (deferred calls during async operations) ────────────────
+      memory: {
+        methodsToExec: [],
+      },
+
+      // ── Scale configuration constants — imported from utils/Constants.js ──────
+      niceScaleAllowedMagMsd: NICE_SCALE_ALLOWED_MAG_MSD,
+      niceScaleDefaultTicks: NICE_SCALE_DEFAULT_TICKS,
+
+      // ── Multi-axis series mapping ─────────────────────────────────────────────
+      seriesYAxisMap: [], // yAxis index → series indices[]
+      seriesYAxisReverseMap: [], // series index → yAxis index
+      noData: false, // true when there is nothing to render
+    }
+    // globalVars() returns the persistent subset; initGlobalVars() fills the
+    // ephemeral properties before first render. Cast to ChartGlobals since the
+    // combined object is structurally complete by the time it is first read.
+    return /** @type {import('../../types/internal').ChartGlobals} */ (
+      /** @type {unknown} */ (globals)
+    )
+  }
+
+  /**
+   * Lazy initial-series snapshot. Capturing `initialSeries` used to deep-clone
+   * the entire series on every parse and every update: the single largest CPU
+   * bucket at 50k+ points (profiled at ~23ms per 50k update). The setter now
+   * stores a cheap per-series shallow copy (series OBJECTS copied, data arrays
+   * shared) and the deep snapshot materializes only when something actually
+   * reads it (resetSeries, toolbar reset-home, tooltip same-length check).
+   *
+   * Why sharing the data arrays is safe: internal "mutations" of a series'
+   * data are property REPLACEMENTS (`series[i].data = []` on legend collapse),
+   * which cannot reach the captured copies because each series object was
+   * copied at capture time. The one in-place mutator (appendData's push loop)
+   * re-captures immediately after mutating, so the pending snapshot never
+   * spans the mutation.
+   *
+   * @param {Record<string, any>} globals
+   */
+  defineLazyInitialSeries(globals) {
+    /** @type {any} */
+    let src = []
+    /** @type {any} */
+    let snap = null
+    Object.defineProperty(globals, 'initialSeries', {
+      configurable: true,
+      enumerable: true,
+      get() {
+        if (snap === null) {
+          snap = Utils.clone(src)
+        }
+        return snap
+      },
+      set(value) {
+        src = Array.isArray(value)
+          ? value.map((s) =>
+              s && typeof s === 'object' && !Array.isArray(s) ? { ...s } : s,
+            )
+          : value
+        snap = null
+        // Read-only peek for hot-path consumers (tooltip's same-length check
+        // runs per update): reading it does NOT materialize the deep snapshot.
+        // Consumers must not mutate it.
+        globals._initialSeriesPeek = src
+      },
+    })
+    globals._initialSeriesPeek = src
+  }
+
+  /**
+   * @param {Record<string, any>} config
+   */
+  init(config) {
+    const globals = this.globalVars(config)
+    this.initGlobalVars(globals)
+
+    this.defineLazyInitialSeries(globals)
+
+    globals.initialConfig = Utils.extend({}, config)
+    globals.initialSeries = config.series
+
+    globals.lastXAxis = Utils.clone(
+      /** @type {NonNullable<typeof globals.initialConfig>} */ (
+        globals.initialConfig
+      ).xaxis,
+    )
+    globals.lastYAxis = Utils.clone(
+      /** @type {NonNullable<typeof globals.initialConfig>} */ (
+        globals.initialConfig
+      ).yaxis,
+    )
+    return globals
+  }
+}

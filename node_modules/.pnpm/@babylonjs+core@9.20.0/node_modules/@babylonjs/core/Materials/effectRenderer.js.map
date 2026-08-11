@@ -1,0 +1,1 @@
+{"version":3,"file":"effectRenderer.js","sourceRoot":"","sources":["../../../../dev/core/src/Materials/effectRenderer.ts"],"names":[],"mappings":"AAAA,cAAc,uBAAuB,CAAC;AAEtC,OAAO,+BAA+B,CAAC;AACvC,OAAO,mCAAmC,CAAC","sourcesContent":["export * from \"./effectRenderer.pure\";\n\nimport \"../Shaders/postprocess.vertex\";\nimport \"../ShadersWGSL/postprocess.vertex\";\n"]}

@@ -1,0 +1,30 @@
+import { Disposable } from '../../common';
+import type { EventArgs, Graph, GraphPlugin } from '../../graph';
+import type { SnaplineImplFilter, SnaplineOptions } from './type';
+import './api';
+export declare class Snapline extends Disposable implements GraphPlugin {
+    name: string;
+    private snaplineImpl;
+    options: SnaplineOptions;
+    constructor(options?: SnaplineOptions);
+    init(graph: Graph): void;
+    isEnabled(): boolean;
+    enable(): void;
+    disable(): void;
+    toggleEnabled(enabled?: boolean): this;
+    hide(): this;
+    setFilter(filter?: SnaplineImplFilter): this;
+    isOnResizingEnabled(): boolean;
+    enableOnResizing(): this;
+    disableOnResizing(): this;
+    toggleOnResizing(enableOnResizing?: boolean): this;
+    isSharp(): boolean;
+    enableSharp(): this;
+    disableSharp(): this;
+    toggleSharp(sharp?: boolean): this;
+    getTolerance(): number;
+    setTolerance(tolerance: number): this;
+    captureCursorOffset(e: EventArgs['node:mousedown']): void;
+    snapOnMoving(args: EventArgs['node:mousemove']): void;
+    dispose(): void;
+}

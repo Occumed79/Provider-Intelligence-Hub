@@ -1,0 +1,43 @@
+{
+  "name": "@pmndrs/pointer-events",
+  "description": "framework agnostic pointer-events implementation for threejs",
+  "license": "SEE LICENSE IN LICENSE",
+  "version": "6.6.30",
+  "homepage": "https://github.com/pmndrs/xr",
+  "author": "Bela Bohlender",
+  "type": "module",
+  "keywords": [
+    "r3f",
+    "events",
+    "pointer",
+    "three.js",
+    "userinterface",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pmndrs/xr"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "vite": "^5.2.11",
+    "vitest": "^2.0.5"
+  },
+  "scripts": {
+    "build": "tsc -p build.tsconfig.json",
+    "test": "vitest run --printConsoleTrace",
+    "bench-write": "vitest bench --output-json bench.json --run",
+    "bench-compare": "vitest bench --compare bench.json --run",
+    "example": "vite example --host",
+    "example:build": "vite build example",
+    "check:prettier": "prettier --check src",
+    "check:eslint": "eslint \"src/**/*.{ts,tsx}\"",
+    "fix:prettier": "prettier --write src",
+    "fix:eslint": "eslint \"src/**/*.{ts,tsx}\" --fix"
+  }
+}

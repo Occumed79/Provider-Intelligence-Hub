@@ -1,0 +1,198 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PanningManager = void 0;
+const tslib_1 = require("tslib");
+const common_1 = require("../common");
+const base_1 = require("./base");
+class PanningManager extends base_1.Base {
+    get widgetOptions() {
+        return this.options.panning;
+    }
+    get pannable() {
+        return this.widgetOptions && this.widgetOptions.enabled === true;
+    }
+    init() {
+        this.onRightMouseDown = this.onRightMouseDown.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onKeyUp = this.onKeyUp.bind(this);
+        this.startListening();
+        this.updateClassName();
+    }
+    startListening() {
+        this.graph.on('blank:mousedown', this.onMouseDown, this);
+        this.graph.on('node:unhandled:mousedown', this.onMouseDown, this);
+        this.graph.on('edge:unhandled:mousedown', this.onMouseDown, this);
+        common_1.Dom.Event.on(this.graph.container, 'mousedown', this.onRightMouseDown);
+        common_1.Dom.Event.on(document.body, {
+            keydown: this.onKeyDown,
+            keyup: this.onKeyUp,
+        });
+        this.mousewheelHandle = new common_1.Dom.MouseWheelHandle(this.graph.container, this.onMouseWheel.bind(this), this.allowMouseWheel.bind(this));
+        this.mousewheelHandle.enable();
+    }
+    stopListening() {
+        this.graph.off('blank:mousedown', this.onMouseDown, this);
+        this.graph.off('node:unhandled:mousedown', this.onMouseDown, this);
+        this.graph.off('edge:unhandled:mousedown', this.onMouseDown, this);
+        common_1.Dom.Event.off(this.graph.container, 'mousedown', this.onRightMouseDown);
+        common_1.Dom.Event.off(document.body, {
+            keydown: this.onKeyDown,
+            keyup: this.onKeyUp,
+        });
+        if (this.mousewheelHandle) {
+            this.mousewheelHandle.disable();
+        }
+    }
+    allowPanning(e, strict) {
+        ;
+        e.spaceKey = this.isSpaceKeyPressed;
+        return (this.pannable &&
+            (0, common_1.isModifierKeyMatch)(e, this.widgetOptions.modifiers, strict));
+    }
+    startPanning(evt) {
+        const e = this.view.normalizeEvent(evt);
+        this.clientX = e.clientX;
+        this.clientY = e.clientY;
+        this.panning = true;
+        this.updateClassName(evt);
+        common_1.Dom.Event.on(document.body, {
+            'mousemove.panning touchmove.panning': this.pan.bind(this),
+            'mouseup.panning touchend.panning': this.stopPanning.bind(this),
+            'mouseleave.panning': this.stopPanning.bind(this),
+        });
+        common_1.Dom.Event.on(window, 'mouseup.panning', this.stopPanning.bind(this));
+    }
+    pan(evt) {
+        const e = this.view.normalizeEvent(evt);
+        const dx = e.clientX - this.clientX;
+        const dy = e.clientY - this.clientY;
+        this.clientX = e.clientX;
+        this.clientY = e.clientY;
+        this.graph.translateBy(dx, dy);
+    }
+    // eslint-disable-next-line
+    stopPanning(e) {
+        this.panning = false;
+        this.updateClassName(e);
+        common_1.Dom.Event.off(document.body, '.panning');
+        common_1.Dom.Event.off(window, '.panning');
+    }
+    updateClassName(e) {
+        const eventTypes = this.widgetOptions.eventTypes;
+        if ((eventTypes === null || eventTypes === void 0 ? void 0 : eventTypes.length) === 1 && eventTypes.includes('mouseWheel')) {
+            return;
+        }
+        const container = this.view.container;
+        const panning = this.view.prefixClassName('graph-panning');
+        const pannable = this.view.prefixClassName('graph-pannable');
+        const selection = this.graph.getPlugin('selection');
+        const allowRubberband = selection && selection.allowRubberband(e, true);
+        const allowRightMouseRubberband = (eventTypes === null || eventTypes === void 0 ? void 0 : eventTypes.includes('leftMouseDown')) && !allowRubberband;
+        if (this.allowPanning(e !== null && e !== void 0 ? e : {}, true) ||
+            (this.allowPanning(e !== null && e !== void 0 ? e : {}) &&
+                allowRightMouseRubberband)) {
+            if (this.panning) {
+                common_1.Dom.addClass(container, panning);
+                common_1.Dom.removeClass(container, pannable);
+            }
+            else {
+                common_1.Dom.removeClass(container, panning);
+                common_1.Dom.addClass(container, pannable);
+            }
+        }
+        else if (!this.panning) {
+            common_1.Dom.removeClass(container, panning);
+            common_1.Dom.removeClass(container, pannable);
+        }
+    }
+    onMouseDown({ e }) {
+        if (!this.allowBlankMouseDown(e)) {
+            return;
+        }
+        const selection = this.graph.getPlugin('selection');
+        const allowRubberband = selection && selection.allowRubberband(e, true);
+        if (this.allowPanning(e, true) ||
+            (this.allowPanning(e) && !allowRubberband)) {
+            this.startPanning(e);
+        }
+    }
+    onRightMouseDown(e) {
+        const eventTypes = this.widgetOptions.eventTypes;
+        if (!((eventTypes === null || eventTypes === void 0 ? void 0 : eventTypes.includes('rightMouseDown')) && e.button === 2)) {
+            return;
+        }
+        if (this.allowPanning(e, true)) {
+            this.startPanning(e);
+        }
+    }
+    onMouseWheel(e, deltaX, deltaY) {
+        this.graph.translateBy(-deltaX, -deltaY);
+    }
+    onKeyDown(e) {
+        if (e.which === 32) {
+            this.isSpaceKeyPressed = true;
+        }
+        this.updateClassName(e);
+    }
+    onKeyUp(e) {
+        if (e.which === 32) {
+            this.isSpaceKeyPressed = false;
+        }
+        this.updateClassName(e);
+    }
+    allowBlankMouseDown(e) {
+        const eventTypes = this.widgetOptions.eventTypes;
+        const isTouchEvent = (typeof e.type === 'string' && e.type.startsWith('touch')) || e.pointerType === 'touch';
+        if (isTouchEvent)
+            return eventTypes === null || eventTypes === void 0 ? void 0 : eventTypes.includes('leftMouseDown');
+        return (((eventTypes === null || eventTypes === void 0 ? void 0 : eventTypes.includes('leftMouseDown')) && e.button === 0) ||
+            ((eventTypes === null || eventTypes === void 0 ? void 0 : eventTypes.includes('mouseWheelDown')) && e.button === 1));
+    }
+    allowMouseWheel(e) {
+        var _a;
+        return (this.pannable &&
+            !e.ctrlKey &&
+            ((_a = this.widgetOptions.eventTypes) === null || _a === void 0 ? void 0 : _a.includes('mouseWheel')));
+    }
+    autoPanning(x, y) {
+        const buffer = 10;
+        const graphArea = this.graph.getGraphArea();
+        let dx = 0;
+        let dy = 0;
+        if (x <= graphArea.left + buffer) {
+            dx = -buffer;
+        }
+        if (y <= graphArea.top + buffer) {
+            dy = -buffer;
+        }
+        if (x >= graphArea.right - buffer) {
+            dx = buffer;
+        }
+        if (y >= graphArea.bottom - buffer) {
+            dy = buffer;
+        }
+        if (dx !== 0 || dy !== 0) {
+            this.graph.translateBy(-dx, -dy);
+        }
+    }
+    enablePanning() {
+        if (!this.pannable) {
+            this.widgetOptions.enabled = true;
+            this.updateClassName();
+        }
+    }
+    disablePanning() {
+        if (this.pannable) {
+            this.widgetOptions.enabled = false;
+            this.updateClassName();
+        }
+    }
+    dispose() {
+        this.stopListening();
+    }
+}
+exports.PanningManager = PanningManager;
+tslib_1.__decorate([
+    (0, common_1.disposable)()
+], PanningManager.prototype, "dispose", null);
+//# sourceMappingURL=panning.js.map

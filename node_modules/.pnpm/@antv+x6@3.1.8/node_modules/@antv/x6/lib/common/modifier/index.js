@@ -1,0 +1,60 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseModifierKey = parseModifierKey;
+exports.isModifierKeyEqual = isModifierKeyEqual;
+exports.isModifierKeyMatch = isModifierKeyMatch;
+function parseModifierKey(modifiers) {
+    const or = [];
+    const and = [];
+    if (Array.isArray(modifiers)) {
+        or.push(...modifiers);
+    }
+    else {
+        modifiers.split('|').forEach((item) => {
+            if (item.indexOf('&') === -1) {
+                or.push(item);
+            }
+            else {
+                and.push(...item.split('&'));
+            }
+        });
+    }
+    return { or, and };
+}
+function isModifierKeyEqual(modifiers1, modifiers2) {
+    if (modifiers1 != null && modifiers2 != null) {
+        const m1 = parseModifierKey(modifiers1);
+        const m2 = parseModifierKey(modifiers2);
+        const or1 = m1.or.sort();
+        const or2 = m2.or.sort();
+        const and1 = m1.and.sort();
+        const and2 = m2.and.sort();
+        const equal = (a1, a2) => {
+            return (a1.length === a2.length &&
+                (a1.length === 0 || a1.every((a, i) => a === a2[i])));
+        };
+        return equal(or1, or2) && equal(and1, and2);
+    }
+    if (modifiers1 == null && modifiers2 == null) {
+        return true;
+    }
+    return false;
+}
+function isModifierKeyMatch(e, modifiers, strict) {
+    if (modifiers == null ||
+        (Array.isArray(modifiers) && modifiers.length === 0)) {
+        return strict
+            ? e.altKey !== true &&
+                e.ctrlKey !== true &&
+                e.metaKey !== true &&
+                e.shiftKey !== true
+            : true;
+    }
+    const { or, and } = parseModifierKey(modifiers);
+    const match = (key) => {
+        const name = `${key.toLowerCase()}Key`;
+        return e[name] === true;
+    };
+    return or.some((key) => match(key)) && and.every((key) => match(key));
+}
+//# sourceMappingURL=index.js.map

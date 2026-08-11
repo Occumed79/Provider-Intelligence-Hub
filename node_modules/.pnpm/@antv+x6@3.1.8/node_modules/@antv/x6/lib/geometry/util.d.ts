@@ -1,0 +1,10 @@
+import type { PointLike } from './point';
+import type { RectangleLike } from './rectangle';
+export declare function round(num: number, precision?: number): number;
+export declare function random(): number;
+export declare function random(max: number): number;
+export declare function random(min: number, max: number): number;
+export declare function clamp(value: number, min: number, max: number): number;
+export declare function snapToGrid(value: number, gridSize: number): number;
+export declare function containsPoint(rect: RectangleLike, point: PointLike): boolean;
+export declare function squaredLength(p1: PointLike, p2: PointLike): number;

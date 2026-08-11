@@ -1,0 +1,1197 @@
+// @ts-check
+import CoreUtils from './CoreUtils'
+import Crosshairs from './Crosshairs'
+import Globals from '../modules/settings/Globals'
+import Graphics from './Graphics'
+import Range from './Range'
+import Utils from '../utils/Utils'
+import TimeScale from './TimeScale'
+import { Environment } from '../utils/Environment.js'
+import { BrowserAPIs } from '../ssr/BrowserAPIs.js'
+import { SVGNS } from '../svg/math'
+import { getChartClass, isCustom } from './ChartFactory'
+
+/**
+ * ApexCharts Core Class responsible for major calculations and creating elements.
+ *
+ * @module Core
+ **/
+
+export default class Core {
+  /**
+   * @param {Element} el
+   * @param {import('../types/internal').ChartStateW} w
+   * @param {import('../types/internal').ChartContext} ctx
+   */
+  constructor(el, w, ctx) {
+    this.w = w
+    this.ctx = ctx // needed: timeScale, updateHelpers, chart type instantiation
+    this.el = el
+  }
+
+  setupElements() {
+    const { globals: gl, config: cnf } = this.w
+
+    const ct = cnf.chart.type
+    const xyChartsArrTypes = [
+      'line',
+      'area',
+      'bar',
+      'rangeBar',
+      'rangeArea',
+      'candlestick',
+      'boxPlot',
+      'violin',
+      'scatter',
+      'bubble',
+    ]
+
+    const axisChartsArrTypes = [
+      ...xyChartsArrTypes,
+      'radar',
+      'heatmap',
+      'treemap',
+    ]
+
+    // Marks (#11): a registered custom series type used as the chart type is an
+    // xy/axis chart (it draws in series space and needs the axis/grid/scale
+    // pipeline). Non-axis built-ins (pie/radialBar/...) are never custom here.
+    const isCustomType =
+      !axisChartsArrTypes.includes(ct) &&
+      !['pie', 'donut', 'polarArea', 'radialBar'].includes(ct) &&
+      isCustom(ct)
+
+    gl.axisCharts = axisChartsArrTypes.includes(ct) || isCustomType
+    gl.xyCharts = xyChartsArrTypes.includes(ct) || isCustomType
+
+    gl.isBarHorizontal =
+      ['bar', 'rangeBar', 'boxPlot', 'violin'].includes(ct) &&
+      cnf.plotOptions.bar.horizontal
+
+    gl.chartClass = `.apexcharts${gl.chartID}`
+    this.w.dom.baseEl = this.el
+
+    this.w.dom.elWrap = BrowserAPIs.createElementNS(
+      'http://www.w3.org/1999/xhtml',
+      'div',
+    )
+    Graphics.setAttrs(this.w.dom.elWrap, {
+      id: gl.chartClass.substring(1),
+      class: `apexcharts-canvas ${gl.chartClass.substring(1)}`,
+    })
+    this.el.appendChild(this.w.dom.elWrap)
+
+    // this.w.dom.Paper = new window.SVG.Doc(this.w.dom.elWrap)
+    // Access SVG from appropriate global scope. `globalThis` resolves to
+    // `window` in browsers and `global` in Node — works in both, typed in
+    // both, no env-specific branching needed.
+    const SVG = /** @type {any} */ (globalThis).SVG
+    this.w.dom.Paper = SVG().addTo(this.w.dom.elWrap)
+
+    this.w.dom.Paper.attr({
+      class: 'apexcharts-svg',
+      'xmlns:data': 'ApexChartsNS',
+      transform: `translate(${cnf.chart.offsetX}, ${cnf.chart.offsetY})`,
+    })
+
+    this.w.dom.Paper.node.style.background =
+      cnf.theme.mode === 'dark' && !cnf.chart.background
+        ? '#343A3F'
+        : cnf.theme.mode === 'light' && !cnf.chart.background
+          ? '#fff'
+          : cnf.chart.background
+
+    this.setSVGDimensions()
+
+    // foreignObject must be added first (at the back in z-order) to prevent blocking interactions
+    this.w.dom.elLegendForeign = BrowserAPIs.createElementNS(
+      SVGNS,
+      'foreignObject',
+    )
+    Graphics.setAttrs(this.w.dom.elLegendForeign, {
+      x: 0,
+      y: 0,
+      width: gl.svgWidth,
+      height: gl.svgHeight,
+    })
+
+    this.w.dom.elLegendWrap = BrowserAPIs.createElementNS(
+      'http://www.w3.org/1999/xhtml',
+      'div',
+    )
+    this.w.dom.elLegendWrap.classList.add('apexcharts-legend')
+
+    this.w.dom.elWrap.appendChild(this.w.dom.elLegendWrap)
+    this.w.dom.Paper.node.appendChild(this.w.dom.elLegendForeign)
+
+    // Screen-reader-only aria-live status region (WCAG 4.1.3). Sits as a
+    // sibling of the SVG so events like zoom-in/out, pan and series toggle
+    // can be announced even when no tooltip is on screen. Visually hidden via
+    // .apexcharts-sr-status in apexcharts.css.
+    if (
+      cnf.chart.accessibility.enabled &&
+      cnf.chart.accessibility.announcements.enabled
+    ) {
+      const srStatus = BrowserAPIs.createElement('div')
+      srStatus.className = 'apexcharts-sr-status'
+      srStatus.setAttribute('role', 'status')
+      srStatus.setAttribute('aria-live', 'polite')
+      srStatus.setAttribute('aria-atomic', 'true')
+      this.w.dom.elWrap.appendChild(srStatus)
+    }
+
+    // Add accessibility elements after foreignObject to maintain proper z-order
+    if (cnf.chart.accessibility.enabled) {
+      const ariaLabel = this.getAccessibleChartLabel()
+
+      // Use role="application" when keyboard navigation is enabled so that
+      // screen readers pass arrow keys through to the chart rather than
+      // intercepting them.
+      const svgRole =
+        cnf.chart.accessibility.keyboard.enabled &&
+        cnf.chart.accessibility.keyboard.navigation.enabled
+          ? 'application'
+          : 'img'
+
+      this.w.dom.Paper.attr({
+        role: svgRole,
+        'aria-label': ariaLabel,
+      })
+
+      // Add desc element when description is provided
+      if (cnf.chart.accessibility.description) {
+        const descEl = BrowserAPIs.createElementNS(SVGNS, 'desc')
+        descEl.textContent = cnf.chart.accessibility.description
+        this.w.dom.Paper.node.insertBefore(
+          descEl,
+          this.w.dom.elLegendForeign.nextSibling,
+        )
+      }
+    }
+
+    this.w.dom.elGraphical = this.w.dom.Paper.group().attr({
+      class: 'apexcharts-inner apexcharts-graphical',
+    })
+
+    this.w.dom.elDefs = this.w.dom.Paper.defs()
+    this.w.dom.Paper.add(this.w.dom.elGraphical)
+    this.w.dom.elGraphical.add(this.w.dom.elDefs)
+  }
+
+  /**
+   * Classify each series by its resolved chart type into per-type render
+   * buckets (`{ series, i }`, plus `seriesRangeEnd` for rangeArea). Side
+   * effects mirror the original inline code: sets `w.globals.columnSeries`,
+   * folds `w.globals.comboCharts`, and warns on unsupported combinations (a
+   * non-combo type mixed in, or horizontal bars in a combo). Extracted from
+   * plotChartType to shrink it (audit C2).
+   * @param {any[]} ser
+   * @returns {{ seriesTypes: Record<string, any>, customBuckets: Record<string, {series: any[], i: number[]}> }}
+   */
+  _classifySeriesByType(ser) {
+    const { w } = this
+    const { config: cnf, globals: gl } = w
+
+    const seriesTypes = {
+      line: { series: [], i: [] },
+      area: { series: [], i: [] },
+      scatter: { series: [], i: [] },
+      bubble: { series: [], i: [] },
+      bar: { series: [], i: [] },
+      candlestick: { series: [], i: [] },
+      boxPlot: { series: [], i: [] },
+      violin: { series: [], i: [] },
+      rangeBar: { series: [], i: [] },
+      rangeArea: { series: [], seriesRangeEnd: [], i: [] },
+    }
+
+    // Marks (#11): registered custom series types, bucketed by type name.
+    /** @type {Record<string, {series: any[], i: number[]}>} */
+    const customBuckets = {}
+
+    const chartType = cnf.chart.type || 'line'
+    let nonComboType = null
+    let comboCount = 0
+
+    /**
+     * @param {Object} serie
+     * @param {number} st
+     */
+    this.w.seriesData.series.forEach((serie, st) => {
+      const seriesType =
+        ser[st]?.type === 'column'
+          ? 'bar'
+          : ser[st]?.type || (chartType === 'column' ? 'bar' : chartType)
+
+      const st_ = /** @type {Record<string,any>} */ (seriesTypes)
+      if (st_[seriesType]) {
+        if (seriesType === 'rangeArea') {
+          st_[seriesType].series.push(this.w.rangeData.seriesRangeStart[st])
+          st_[seriesType].seriesRangeEnd.push(
+            this.w.rangeData.seriesRangeEnd[st],
+          )
+        } else {
+          st_[seriesType].series.push(serie)
+        }
+        st_[seriesType].i.push(st)
+
+        if (seriesType === 'bar') w.globals.columnSeries = seriesTypes.bar
+      } else if (
+        [
+          'heatmap',
+          'treemap',
+          'pie',
+          'donut',
+          'polarArea',
+          'radialBar',
+          'radar',
+          'unit',
+          'sunburst',
+        ].includes(seriesType)
+      ) {
+        nonComboType = seriesType
+      } else if (isCustom(seriesType)) {
+        // Marks (#11): a registered custom series type.
+        if (!customBuckets[seriesType]) {
+          customBuckets[seriesType] = { series: [], i: [] }
+        }
+        customBuckets[seriesType].series.push(serie)
+        customBuckets[seriesType].i.push(st)
+      } else {
+        console.warn(
+          `You have specified an unrecognized series type (${seriesType}).`,
+        )
+      }
+      if (chartType !== seriesType && seriesType !== 'scatter') comboCount++
+    })
+
+    if (comboCount > 0) {
+      if (nonComboType) {
+        console.warn(
+          `Chart or series type ${nonComboType} cannot appear with other chart or series types.`,
+        )
+      }
+      if (seriesTypes.bar.series.length > 0 && cnf.plotOptions.bar.horizontal) {
+        comboCount -= seriesTypes.bar.series.length
+        seriesTypes.bar = { series: [], i: [] }
+        w.globals.columnSeries = { series: [], i: [] }
+        console.warn(
+          'Horizontal bars are not supported in a mixed/combo chart. Please turn off `plotOptions.bar.horizontal`',
+        )
+      }
+    }
+    gl.comboCharts ||= comboCount > 0
+
+    return { seriesTypes, customBuckets }
+  }
+
+  /**
+   * @param {any[]} ser
+   * @param {import('../types/internal').XYRatios} xyRatios
+   */
+  plotChartType(ser, xyRatios) {
+    const { w, ctx } = this
+
+    // Strata (#2): start a fresh series display list for the canvas renderer.
+    // Series marks emitted during draw() below are recorded, not added to the
+    // DOM; they are painted at the end of this method (see the wrap below).
+    const canvasMode = ctx.renderer && ctx.renderer.kind === 'canvas'
+    if (canvasMode) ctx.renderer.beginSeries()
+
+    const { seriesTypes, customBuckets } = this._classifySeriesByType(ser)
+
+    const renderers = this._instantiateSeriesRenderers(seriesTypes, xyRatios)
+
+    const elGraph = this._assembleSeriesGraphics(
+      seriesTypes,
+      customBuckets,
+      renderers,
+      xyRatios,
+    )
+
+    if (canvasMode) {
+      // Paint the recorded series display list into a <foreignObject><canvas>
+      // and wrap it with the real SVG chrome groups (data labels etc.) the
+      // draw() built. Canvas sits at the back of the wrap (behind the chrome);
+      // the whole wrap composites into elGraphical exactly like the SVG elGraph
+      // the two plotChartType consumers already handle. The series marks live
+      // only on the canvas: the chrome groups carry no marks (they were
+      // skipped by SVGElement.add).
+      // Data-only fast update: repaint the existing canvas instead of
+      // building a new foreignObject + backing store, and slot the fresh
+      // chrome groups into the existing wrap. Falls through to a full
+      // present() whenever the host is gone.
+      const rr = /** @type {any} */ (ctx.renderer)
+      if (rr && rr._repaintHostInPlace) {
+        rr._repaintHostInPlace = false
+        const wrapNode = this.w.dom.elGraphical.node.querySelector(
+          '.apexcharts-canvas-series-wrap',
+        )
+        if (wrapNode && rr.canRepaintInPlace && rr.canRepaintInPlace()) {
+          rr.repaintInPlace()
+          const groups = Array.isArray(elGraph) ? elGraph : [elGraph]
+          groups.forEach((g) => {
+            if (g && g.node) wrapNode.appendChild(g.node)
+          })
+          return []
+        }
+      }
+      const host = ctx.renderer.present()
+      // A renderer may decline a host (present() → null) when it emits straight
+      // into the SVG tree via delegation instead of a canvas layer; then the
+      // marks are already in elGraph and there's nothing extra to composite.
+      if (host) {
+        const wrap = new Graphics(w).group({
+          class: 'apexcharts-canvas-series-wrap',
+        })
+        wrap.add(host)
+        const groups = Array.isArray(elGraph) ? elGraph : [elGraph]
+        groups.forEach((g) => {
+          if (g) wrap.add(g)
+        })
+        return wrap
+      }
+    }
+
+    return elGraph
+  }
+
+  /**
+   * Lazily instantiate the shared series renderers the orchestration below
+   * needs. getChartClass() is only called for types actually present, so a page
+   * that registers just 'line' never triggers a lookup for 'candlestick' etc.
+   * (tree-shaking). Returns the line/candlestick/violin renderers and sets
+   * ctx.pie / ctx.rangeBar as a side effect (both may be null). Extracted from
+   * plotChartType (audit C2).
+   * @param {Record<string, any>} seriesTypes
+   * @param {import('../types/internal').XYRatios} xyRatios
+   * @returns {{ line: any, boxCandlestick: any, violin: any }}
+   */
+  _instantiateSeriesRenderers(seriesTypes, xyRatios) {
+    const { w, ctx } = this
+    const { config: cnf, globals: gl } = w
+
+    const needsLine =
+      seriesTypes.line.series.length > 0 ||
+      seriesTypes.area.series.length > 0 ||
+      seriesTypes.scatter.series.length > 0 ||
+      seriesTypes.bubble.series.length > 0 ||
+      seriesTypes.rangeArea.series.length > 0 ||
+      (!gl.comboCharts &&
+        ['line', 'area', 'scatter', 'bubble', 'rangeArea'].includes(
+          cnf.chart.type,
+        ))
+    const line = needsLine
+      ? new (getChartClass('line'))(ctx.w, ctx, xyRatios)
+      : null
+
+    const needsCandlestick =
+      seriesTypes.candlestick.series.length > 0 ||
+      seriesTypes.boxPlot.series.length > 0 ||
+      (!gl.comboCharts && ['candlestick', 'boxPlot'].includes(cnf.chart.type))
+    const boxCandlestick = needsCandlestick
+      ? new (getChartClass('candlestick'))(ctx.w, ctx, xyRatios)
+      : null
+
+    const needsViolin =
+      seriesTypes.violin.series.length > 0 ||
+      (!gl.comboCharts && cnf.chart.type === 'violin')
+    const violin = needsViolin
+      ? new (getChartClass('violin'))(ctx.w, ctx, xyRatios)
+      : null
+
+    const needsPie =
+      !gl.comboCharts && ['pie', 'donut', 'polarArea'].includes(cnf.chart.type)
+    ctx.pie = needsPie ? new (getChartClass('pie'))(ctx.w, ctx) : null
+
+    const needsRangeBar =
+      seriesTypes.rangeBar.series.length > 0 ||
+      (!gl.comboCharts && cnf.chart.type === 'rangeBar')
+    ctx.rangeBar = needsRangeBar
+      ? new (getChartClass('rangeBar'))(ctx.w, ctx, xyRatios)
+      : null
+
+    return { line, boxCandlestick, violin }
+  }
+
+  /**
+   * Build the ordered list of series graphic groups (elGraph) from the
+   * classified buckets. Combo charts layer per-type draws in z-order; a
+   * single-type chart dispatches on cnf.chart.type. Sets ctx.bar for the
+   * non-stacked bar paths (side effect, preserved). Extracted from
+   * plotChartType (audit C2).
+   * @param {Record<string, any>} seriesTypes
+   * @param {Record<string, {series: any[], i: number[]}>} customBuckets
+   * @param {{ line: any, boxCandlestick: any, violin: any }} renderers
+   * @param {import('../types/internal').XYRatios} xyRatios
+   * @returns {any}
+   */
+  _assembleSeriesGraphics(seriesTypes, customBuckets, renderers, xyRatios) {
+    const { w, ctx } = this
+    const { config: cnf, globals: gl } = w
+    const { line, boxCandlestick, violin } = renderers
+
+    let elGraph = []
+
+    if (gl.comboCharts) {
+      const coreUtils = new CoreUtils(this.w)
+      if (seriesTypes.area.series.length > 0) {
+        elGraph.push(
+          ...coreUtils.drawSeriesByGroup(
+            seriesTypes.area,
+            gl.areaGroups,
+            'area',
+            line,
+          ),
+        )
+      }
+      if (seriesTypes.bar.series.length > 0) {
+        if (cnf.chart.stacked) {
+          const barStacked = new (getChartClass('barStacked'))(
+            ctx.w,
+            ctx,
+            xyRatios,
+          )
+          elGraph.push(
+            barStacked.draw(seriesTypes.bar.series, seriesTypes.bar.i),
+          )
+        } else {
+          ctx.bar = new (getChartClass('bar'))(ctx.w, ctx, xyRatios)
+          elGraph.push(ctx.bar.draw(seriesTypes.bar.series, seriesTypes.bar.i))
+        }
+      }
+      if (seriesTypes.rangeArea.series.length > 0) {
+        elGraph.push(
+          line.draw(
+            seriesTypes.rangeArea.series,
+            'rangeArea',
+            seriesTypes.rangeArea.i,
+            seriesTypes.rangeArea.seriesRangeEnd,
+          ),
+        )
+      }
+      if (seriesTypes.line.series.length > 0) {
+        elGraph.push(
+          ...coreUtils.drawSeriesByGroup(
+            seriesTypes.line,
+            gl.lineGroups,
+            'line',
+            line,
+          ),
+        )
+      }
+      if (seriesTypes.candlestick.series.length > 0) {
+        elGraph.push(
+          boxCandlestick.draw(
+            seriesTypes.candlestick.series,
+            'candlestick',
+            seriesTypes.candlestick.i,
+          ),
+        )
+      }
+      if (seriesTypes.boxPlot.series.length > 0) {
+        elGraph.push(
+          boxCandlestick.draw(
+            seriesTypes.boxPlot.series,
+            'boxPlot',
+            seriesTypes.boxPlot.i,
+          ),
+        )
+      }
+      if (seriesTypes.violin.series.length > 0) {
+        elGraph.push(
+          violin.draw(seriesTypes.violin.series, 'violin', seriesTypes.violin.i),
+        )
+      }
+      if (seriesTypes.rangeBar.series.length > 0) {
+        elGraph.push(
+          ctx.rangeBar.draw(
+            seriesTypes.rangeBar.series,
+            seriesTypes.rangeBar.i,
+          ),
+        )
+      }
+      if (seriesTypes.scatter.series.length > 0) {
+        const scatterLine = new (getChartClass('line'))(
+          ctx.w,
+          ctx,
+          xyRatios,
+          true,
+        )
+        elGraph.push(
+          scatterLine.draw(
+            seriesTypes.scatter.series,
+            'scatter',
+            seriesTypes.scatter.i,
+          ),
+        )
+      }
+      if (seriesTypes.bubble.series.length > 0) {
+        const bubbleLine = new (getChartClass('line'))(
+          ctx.w,
+          ctx,
+          xyRatios,
+          true,
+        )
+        elGraph.push(
+          bubbleLine.draw(
+            seriesTypes.bubble.series,
+            'bubble',
+            seriesTypes.bubble.i,
+          ),
+        )
+      }
+      // Marks (#11): registered custom series types in a combo.
+      Object.keys(customBuckets).forEach((cname) => {
+        const bucket = customBuckets[cname]
+        if (bucket.series.length > 0) {
+          const cs = new (getChartClass(cname))(ctx.w, ctx, xyRatios)
+          elGraph.push(cs.draw(bucket.series, cname, bucket.i))
+        }
+      })
+    } else {
+      const type = cnf.chart.type
+      switch (type) {
+        case 'line':
+          elGraph = line.draw(this.w.seriesData.series, 'line')
+          break
+        case 'area':
+          elGraph = line.draw(this.w.seriesData.series, 'area')
+          break
+        case 'bar':
+          if (cnf.chart.stacked) {
+            const barStacked = new (getChartClass('barStacked'))(
+              ctx.w,
+              ctx,
+              xyRatios,
+            )
+            elGraph = barStacked.draw(this.w.seriesData.series)
+          } else {
+            ctx.bar = new (getChartClass('bar'))(ctx.w, ctx, xyRatios)
+            elGraph = ctx.bar.draw(this.w.seriesData.series)
+          }
+          break
+        case 'candlestick':
+          elGraph = boxCandlestick.draw(this.w.seriesData.series, 'candlestick')
+          break
+        case 'boxPlot':
+          elGraph = boxCandlestick.draw(this.w.seriesData.series, type)
+          break
+        case 'violin':
+          elGraph = violin.draw(this.w.seriesData.series, 'violin')
+          break
+        case 'rangeBar':
+          elGraph = ctx.rangeBar.draw(this.w.seriesData.series)
+          break
+        case 'rangeArea':
+          elGraph = line.draw(
+            this.w.rangeData.seriesRangeStart,
+            'rangeArea',
+            undefined,
+            this.w.rangeData.seriesRangeEnd,
+          )
+          break
+        case 'heatmap': {
+          const heatmap = new (getChartClass('heatmap'))(ctx.w, ctx, xyRatios)
+          elGraph = heatmap.draw(this.w.seriesData.series)
+          break
+        }
+        case 'treemap': {
+          const treemap = new (getChartClass('treemap'))(ctx.w, ctx)
+          elGraph = treemap.draw(this.w.seriesData.series)
+          break
+        }
+        case 'unit': {
+          const unit = new (getChartClass('unit'))(ctx.w, ctx)
+          elGraph = unit.draw(this.w.seriesData.series)
+          break
+        }
+        case 'sunburst': {
+          const sunburst = new (getChartClass('sunburst'))(ctx.w, ctx)
+          elGraph = sunburst.draw(this.w.seriesData.series)
+          break
+        }
+        case 'pie':
+        case 'donut':
+        case 'polarArea':
+          elGraph = ctx.pie.draw(this.w.seriesData.series)
+          break
+        case 'radialBar': {
+          const radialBar = new (getChartClass('radialBar'))(ctx.w, ctx)
+          elGraph = radialBar.draw(this.w.seriesData.series)
+          break
+        }
+        case 'radar': {
+          const radar = new (getChartClass('radar'))(ctx.w, ctx)
+          elGraph = radar.draw(this.w.seriesData.series)
+          break
+        }
+        default:
+          if (isCustom(type)) {
+            // Marks (#11): a registered custom series type as the chart type.
+            const cs = new (getChartClass(type))(ctx.w, ctx, xyRatios)
+            elGraph = cs.draw(this.w.seriesData.series, type)
+          } else {
+            elGraph = line.draw(this.w.seriesData.series)
+          }
+      }
+    }
+
+    return elGraph
+  }
+
+  /**
+   * Extract the CSS unit suffix from a chart width/height config value
+   * (`'100%'` -> `'%'`, `'300px'` -> `'px'`, `300`/`'300'` -> `''`). Kept as the
+   * original digit-split idiom so results are identical for every input the
+   * call sites already handle ('%', 'px', '', 'auto').
+   * @param {string|number} value
+   * @returns {string|undefined}
+   */
+  _extractDimensionUnit(value) {
+    return String(value)
+      .split(/[0-9]+/g)
+      .pop()
+  }
+
+  setSVGDimensions() {
+    const { globals: gl, config: cnf } = this.w
+
+    cnf.chart.width = cnf.chart.width || '100%'
+    cnf.chart.height = cnf.chart.height || 'auto'
+
+    const rawWidth = cnf.chart.width
+    const rawHeight = cnf.chart.height
+
+    // Pre-set NaN so that when the element cannot be measured (e.g. JSDOM with
+    // percentage width), svgWidth doesn't stay at the Globals default of 0.
+    // The branching below overwrites with a real value when measurement works.
+    // The original code achieved this by assigning the raw config string first
+    // (e.g. '100%'). We use NaN instead to keep the type as number.
+    gl.svgWidth = NaN
+    gl.svgHeight = NaN
+
+    let elDim = Utils.getDimensions(this.el)
+    const widthUnit = this._extractDimensionUnit(rawWidth)
+
+    if (widthUnit === '%') {
+      if (Utils.isNumber(elDim[0])) {
+        if (elDim[0].width === 0) {
+          elDim = Utils.getDimensions(this.el.parentNode)
+        }
+        gl.svgWidth = (elDim[0] * parseInt(rawWidth, 10)) / 100
+      }
+    } else if (widthUnit === 'px' || widthUnit === '') {
+      gl.svgWidth = parseInt(rawWidth, 10)
+    }
+
+    const heightUnit = this._extractDimensionUnit(rawHeight)
+    if (rawHeight !== 'auto' && rawHeight !== '') {
+      if (heightUnit === '%') {
+        const elParentDim = Utils.getDimensions(this.el.parentNode)
+        gl.svgHeight = (elParentDim[1] * parseInt(rawHeight, 10)) / 100
+      } else {
+        gl.svgHeight = parseInt(rawHeight, 10)
+      }
+    } else {
+      gl.svgHeight = gl.axisCharts ? gl.svgWidth / 1.61 : gl.svgWidth / 1.2
+    }
+
+    gl.svgWidth = Math.max(gl.svgWidth, 0)
+    gl.svgHeight = Math.max(gl.svgHeight, 0)
+
+    Graphics.setAttrs(this.w.dom.Paper.node, {
+      width: gl.svgWidth,
+      height: gl.svgHeight,
+    })
+
+    if (heightUnit !== '%' && Environment.isBrowser()) {
+      // parentHeightOffset gives breathing room above the SVG so the topmost
+      // axis label / gridline / data label isn't clipped. When the chart has
+      // no axis adornments visible (grid, x/y labels, axis borders, axis
+      // ticks) and no data labels, nothing reaches the top edge — skip it.
+      const needsAxisPadding =
+        gl.axisCharts &&
+        (cnf.grid.show ||
+          cnf.dataLabels.enabled ||
+          cnf.xaxis.labels.show ||
+          cnf.xaxis.axisBorder.show ||
+          cnf.xaxis.axisTicks.show ||
+          cnf.yaxis.some(
+            (/** @type {any} */ y) =>
+              y.show &&
+              (y.labels.show || y.axisBorder.show || y.axisTicks.show),
+          ))
+      const offsetY =
+        cnf.chart.sparkline.enabled || !needsAxisPadding
+          ? 0
+          : cnf.chart.parentHeightOffset
+      const paperNode = this.w.dom.Paper.node
+      if (paperNode.parentNode?.parentNode) {
+        paperNode.parentNode.parentNode.style.minHeight = `${gl.svgHeight + offsetY}px`
+      }
+    }
+
+    this.w.dom.elWrap.style.width = `${gl.svgWidth}px`
+    this.w.dom.elWrap.style.height = `${gl.svgHeight}px`
+
+    // Record the container inputs this render was sized from, so a later resize
+    // can tell whether it actually changes the drawing box (see getResizeSignature).
+    gl.lastResizeSignature = this.getResizeSignature()
+  }
+
+  /**
+   * A stable fingerprint of the container measurements that actually feed the
+   * chart's rendered dimensions, given the width/height config. Only inputs that
+   * a resize can change are included: the element width when the width is a
+   * percentage, and the parent height when the height is a percentage. A fully
+   * pixel-sized chart therefore has a constant signature, so a resize never
+   * forces a redraw; a percentage-sized chart's signature tracks the container.
+   * The window-resize handler compares this against the last render to skip
+   * redraws (and the entrance-animation teardown they cause) that aren't needed.
+   * @returns {{ w: number, h: number }}
+   */
+  getResizeSignature() {
+    const { config: cnf } = this.w
+    const rawWidth = (cnf.chart.width || '100%').toString().trim()
+    const rawHeight = (cnf.chart.height || 'auto').toString().trim()
+
+    let w = 0
+    let h = 0
+
+    if (rawWidth.endsWith('%')) {
+      let elDim = Utils.getDimensions(this.el)
+      if (!elDim[0]) elDim = Utils.getDimensions(this.el.parentNode)
+      w = elDim[0] || 0
+    }
+    if (rawHeight.endsWith('%')) {
+      h = Utils.getDimensions(this.el.parentNode)[1] || 0
+    }
+
+    /** @type {{ w: number; h: number; iw?: number }} */
+    const sig = { w: Math.round(w), h: Math.round(h) }
+
+    // Responsive breakpoints are keyed on window.innerWidth and are only
+    // re-applied by a full render. Fold innerWidth into the signature when the
+    // chart has breakpoints, so crossing one still forces a redraw even when the
+    // drawing box is unchanged (a fixed-pixel chart, or a %-width chart inside a
+    // fixed-width container). Without this the resize-skip below swallowed it.
+    if (cnf.responsive && cnf.responsive.length && Environment.isBrowser()) {
+      sig.iw = window.innerWidth
+    }
+
+    return sig
+  }
+
+  shiftGraphPosition() {
+    const { globals: gl } = this.w
+    const { translateY: tY, translateX: tX } = gl
+
+    Graphics.setAttrs(this.w.dom.elGraphical.node, {
+      transform: `translate(${tX}, ${tY})`,
+    })
+  }
+
+  resizeNonAxisCharts() {
+    const { w } = this
+
+    // When the user supplies an explicit chart.height (px or %), honor it for
+    // FULL circles — don't re-derive SVG / wrap heights from arc geometry.
+    // Only 'auto' (and empty) means "size yourself to fit the arc + legend".
+    // Partial arcs (semi-circle / sector gauges) are the exception: their
+    // arc occupies only part of the circle, so honoring a square-ish pixel
+    // height leaves dead space below the chord. Those always fit-to-content
+    // (see the radialAngleSpan < 360 branch), and only a '%' height — which
+    // is parent-relative and must not be overwritten in px — opts out.
+    const heightStr = w.config.chart.height
+      ? String(w.config.chart.height)
+      : ''
+    const userSetFixedHeight = heightStr !== '' && heightStr !== 'auto'
+    const isPercentHeight = heightStr.includes('%')
+
+    let legendHeight = 0
+    let offY = w.config.chart.sparkline.enabled ? 1 : 15
+    // Mirrors the plot's top inset (w.layout.translateY, added below) on the
+    // bottom, so the padding the layout was actually built from is reserved at
+    // both ends. Must be the resolved pad, not config.grid.padding.
+    offY += w.layout.gridPad.bottom
+
+    if (
+      ['top', 'bottom'].includes(w.config.legend.position) &&
+      w.config.legend.show &&
+      !w.config.legend.floating
+    ) {
+      legendHeight =
+        (this.ctx.legend?.legendHelpers.getLegendDimensions().clwh ?? 0) + 7
+    }
+
+    const el = w.dom.baseEl.querySelector(
+      '.apexcharts-radialbar, .apexcharts-pie, .apexcharts-sunburst',
+    )
+    // When outer (name) labels are shown, the pie was shrunk and re-centered to
+    // `radius + marginY` from the top; reserve a matching band top AND bottom so
+    // the labels don't clip. Falls back to the historical 2.05 slack otherwise.
+    const externalLabelMarginY = w.globals.pieExternalLabelMarginY || 0
+    let chartInnerDimensions =
+      externalLabelMarginY > 0
+        ? w.globals.radialSize * 2 + externalLabelMarginY * 2
+        : w.globals.radialSize * 2.05
+
+    // Angular span of the drawn arc, read from the ACTIVE chart type's OWN
+    // start/end angles. A pie/donut/sunburst semicircle is just as "partial" as
+    // a gauge, so it must fit-to-content the same way. Reading radialBar's
+    // angles for every type (they default to a full 360°) left semi pies and
+    // semicircle sunbursts stranded on the full-circle square, with dead space
+    // between the arc's flat side and the legend below it.
+    const angleType =
+      w.config.chart.type === 'sunburst'
+        ? 'sunburst'
+        : w.config.chart.type === 'pie' ||
+            w.config.chart.type === 'donut' ||
+            w.config.chart.type === 'polarArea'
+          ? 'pie'
+          : 'radialBar'
+    const radialAngleSpan = Math.abs(
+      w.config.plotOptions[angleType].endAngle -
+        w.config.plotOptions[angleType].startAngle,
+    )
+    if (el && !w.config.chart.sparkline.enabled && radialAngleSpan < 360) {
+      const svgRect = Utils.getBoundingClientRect(this.w.dom.Paper.node)
+      // Compute the visible arc extent by walking children and EXCLUDING the
+      // hollow circle. The hollow is always a full 360° circle, so for
+      // partial-arc gauges its lower half sits below the arc chord with no
+      // visible content — inflating the bbox and breaking auto-sizing.
+      let arcTopFromSVGTop = Infinity
+      let arcBottomFromSVGTop = -Infinity
+      // Walk to leaf nodes only — measuring parent <g> elements would
+      // re-include the hollow's bbox via inheritance, defeating the skip.
+      /** @param {Element} node */
+      const accumulate = (node) => {
+        if (node.classList?.contains('apexcharts-radialbar-hollow')) {
+          return
+        }
+        // Skip text/tspan — datalabels can be placed far from the arc
+        // (e.g. stroked-gauge's "Median Ratio" at offsetY: 120 sits 120px
+        // below center). They're decorative; the chart's vertical sizing
+        // should be driven by the arc geometry, not label position.
+        const tag = node.tagName?.toLowerCase?.()
+        if (tag === 'text' || tag === 'tspan') return
+        const children = Array.from(node.children ?? [])
+        if (children.length > 0) {
+          children.forEach((c) => accumulate(/** @type {Element} */ (c)))
+          return
+        }
+        // Leaf node — measure it.
+        const r = Utils.getBoundingClientRect(node)
+        const height = r.bottom - r.top
+        if (height > 0) {
+          const top = r.top - svgRect.top
+          const bottom = r.bottom - svgRect.top
+          if (top < arcTopFromSVGTop) arcTopFromSVGTop = top
+          if (bottom > arcBottomFromSVGTop) arcBottomFromSVGTop = bottom
+        }
+      }
+      Array.from(el.children ?? []).forEach((c) =>
+        accumulate(/** @type {Element} */ (c)),
+      )
+      // Fallback if no measurable children were found.
+      if (!Number.isFinite(arcTopFromSVGTop)) arcTopFromSVGTop = 0
+      if (!Number.isFinite(arcBottomFromSVGTop)) {
+        const elRect = Utils.getBoundingClientRect(el)
+        arcBottomFromSVGTop = elRect.bottom - svgRect.top
+      }
+      // Padding scales with the arc size so larger gauges get proportionally
+      // more breathing room. Same value applied to top AND bottom so the
+      // arc is vertically centered within the SVG regardless of shape.
+      const padding = Math.max(offY, w.globals.radialSize * 0.2)
+      // Only shift the graphical group DOWN to give an arc more top
+      // breathing room when its natural top is too close to the SVG edge.
+      // Never pull the arc UP — that would override the renderer's intent
+      // for charts whose arc geometry (e.g. ∩-shape -135/+135) naturally
+      // sits with ample space at the top.
+      const verticalShift = Math.max(padding - arcTopFromSVGTop, 0)
+      if (verticalShift !== 0) {
+        w.layout.translateY = (w.layout.translateY ?? 0) + verticalShift
+        Graphics.setAttrs(this.w.dom.elGraphical.node, {
+          transform: `translate(${w.layout.translateX ?? 0}, ${w.layout.translateY})`,
+        })
+        arcBottomFromSVGTop += verticalShift
+      }
+      chartInnerDimensions =
+        arcBottomFromSVGTop > 0
+          ? arcBottomFromSVGTop
+          : w.globals.radialSize * 2.05
+      // Pad the bottom with the SAME breathing room the arc has at the top
+      // so the SVG ends up centered around the arc. The previous fixed
+      // padding (radialSize * 0.2 ≈ 25px) was independent of the natural
+      // top space and guaranteed asymmetry — for a 270° ∪-gauge it left
+      // ~57px above the arc and only ~25px below within the SVG.
+      const bottomPadding = Math.max(padding, arcTopFromSVGTop)
+      const svgHeight = Math.ceil(
+        chartInnerDimensions + legendHeight + bottomPadding,
+      )
+      // `chart.offsetY` is applied as a transform on the SVG element, which
+      // shifts the SVG within elWrap. For positive offsetY the SVG's bottom
+      // ends up below elWrap's bottom — grow elWrap by that amount so the
+      // visible drawing area still contains the full SVG.
+      const chartOffsetY = w.config.chart.offsetY ?? 0
+      const elWrapHeight = svgHeight + Math.max(chartOffsetY, 0)
+      // Partial arcs always fit-to-content (skip only for '%' heights).
+      if (!isPercentHeight) {
+        if (this.w.dom.elLegendForeign) {
+          this.w.dom.elLegendForeign.setAttribute(
+            'height',
+            String(elWrapHeight),
+          )
+        }
+        this.w.dom.elWrap.style.height = `${elWrapHeight}px`
+        Graphics.setAttrs(this.w.dom.Paper.node, { height: svgHeight })
+        if (Environment.isBrowser()) {
+          const grandparent = this.w.dom.Paper.node.parentNode?.parentNode
+          if (grandparent) {
+            grandparent.style.minHeight = `${elWrapHeight}px`
+          }
+        }
+        // A bottom legend was placed at the bottom of the ORIGINAL (full-circle)
+        // svgHeight; now that the SVG has been hugged to the arc, re-anchor it to
+        // the new height so it sits just below the arc instead of hanging off the
+        // shrunken wrap. (Top legends anchor to the title, not the height.)
+        w.globals.svgHeight = svgHeight
+        if (
+          w.config.legend.position === 'bottom' &&
+          w.config.legend.show &&
+          !w.config.legend.floating
+        ) {
+          this.ctx.legend?.setLegendWrapXY(20, 0)
+        }
+      }
+      return
+    }
+
+    const newHeight = Math.ceil(
+      chartInnerDimensions + this.w.layout.translateY + legendHeight + offY,
+    )
+
+    if (userSetFixedHeight) return
+
+    if (this.w.dom.elLegendForeign) {
+      this.w.dom.elLegendForeign.setAttribute('height', String(newHeight))
+    }
+
+    this.w.dom.elWrap.style.height = `${newHeight}px`
+    Graphics.setAttrs(this.w.dom.Paper.node, { height: newHeight })
+    if (Environment.isBrowser()) {
+      const grandparent = this.w.dom.Paper.node.parentNode?.parentNode
+      if (grandparent) {
+        grandparent.style.minHeight = `${newHeight}px`
+      }
+    }
+  }
+
+  coreCalculations() {
+    new Range(this.w).init()
+  }
+
+  resetGlobals() {
+    const resetxyValues = () => this.w.config.series.map(() => [])
+    const globalObj = new Globals()
+
+    const { globals: gl } = this.w
+
+    const parsingFlags = {
+      dataWasParsed: this.w.axisFlags.dataWasParsed,
+      originalSeries: gl.originalSeries,
+    }
+
+    globalObj.initGlobalVars(gl)
+    gl.seriesXvalues = resetxyValues()
+    gl.seriesYvalues = resetxyValues()
+
+    if (parsingFlags.dataWasParsed) {
+      this.w.axisFlags.dataWasParsed = parsingFlags.dataWasParsed
+      gl.originalSeries = parsingFlags.originalSeries
+    }
+  }
+
+  isMultipleY() {
+    if (Array.isArray(this.w.config.yaxis) && this.w.config.yaxis.length > 1) {
+      this.w.globals.isMultipleYAxis = true
+      return true
+    }
+    return false
+  }
+
+  xySettings() {
+    const { w } = this
+    let xyRatios = null
+
+    if (w.globals.axisCharts) {
+      if (w.config.xaxis.crosshairs.position === 'back') {
+        new Crosshairs(this.w).drawXCrosshairs()
+      }
+      if (w.config.yaxis[0].crosshairs.position === 'back') {
+        new Crosshairs(this.w).drawYCrosshairs()
+      }
+
+      if (
+        w.config.xaxis.type === 'datetime' &&
+        w.config.xaxis.labels.formatter === undefined
+      ) {
+        this.ctx.timeScale = new TimeScale(this.w, this.ctx)
+        let formattedTimeScale = []
+        if (
+          isFinite(w.globals.minX) &&
+          isFinite(w.globals.maxX) &&
+          !w.globals.isBarHorizontal
+        ) {
+          formattedTimeScale = this.ctx.timeScale.calculateTimeScaleTicks(
+            w.globals.minX,
+            w.globals.maxX,
+          )
+        } else if (w.globals.isBarHorizontal) {
+          formattedTimeScale = this.ctx.timeScale.calculateTimeScaleTicks(
+            w.globals.minY,
+            w.globals.maxY,
+          )
+        }
+        this.ctx.timeScale.recalcDimensionsBasedOnFormat(formattedTimeScale)
+      }
+
+      const coreUtils = new CoreUtils(this.w)
+      xyRatios = coreUtils.getCalculatedRatios()
+    }
+    return xyRatios
+  }
+
+  /**
+   * @param {any} targetChart
+   */
+  updateSourceChart(targetChart) {
+    this.ctx.w.interact.selection = undefined
+    this.ctx.updateHelpers._updateOptions(
+      {
+        chart: {
+          selection: {
+            xaxis: {
+              min: targetChart.w.globals.minX,
+              max: targetChart.w.globals.maxX,
+            },
+          },
+        },
+      },
+      false,
+      false,
+    )
+  }
+
+  setupBrushHandler() {
+    const { ctx, w } = this
+
+    if (!w.config.chart.brush.enabled) return
+
+    if (typeof w.config.chart.events.selection !== 'function') {
+      const targets = Array.isArray(w.config.chart.brush.targets)
+        ? w.config.chart.brush.targets
+        : [w.config.chart.brush.target]
+      targets.forEach((/** @type {any} */ target) => {
+        const targetChart = /** @type {any} */ (ctx.constructor).getChartByID(
+          target,
+        )
+        // getChartByID returns undefined for a missing/mistyped id, or one whose
+        // chart has not rendered yet. Warn and skip instead of throwing an opaque
+        // TypeError mid-render.
+        if (!targetChart) {
+          console.warn(
+            `ApexCharts: brush target "${target}" was not found. Ensure the target chart is rendered (and its chart.id matches) before the brush chart.`,
+          )
+          return
+        }
+        targetChart.w.globals.brushSource = this.ctx
+
+        if (typeof targetChart.w.config.chart.events.zoomed !== 'function') {
+          targetChart.w.config.chart.events.zoomed = () =>
+            this.updateSourceChart(targetChart)
+        }
+        if (typeof targetChart.w.config.chart.events.scrolled !== 'function') {
+          targetChart.w.config.chart.events.scrolled = () =>
+            /**
+             * @param {any} chart
+             * @param {Event} e
+             */
+            this.updateSourceChart(targetChart)
+        }
+      })
+
+      w.config.chart.events.selection = (
+        /** @type {any} */ chart,
+        /** @type {any} */ e,
+      ) => {
+        targets.forEach((/** @type {any} */ target) => {
+          const targetChart = /** @type {any} */ (ctx.constructor).getChartByID(
+            target,
+          )
+          if (!targetChart) return
+          targetChart.ctx.updateHelpers._updateOptions(
+            {
+              xaxis: {
+                min: e.xaxis.min,
+                max: e.xaxis.max,
+              },
+            },
+            false,
+            false,
+            false,
+            false,
+          )
+        })
+      }
+    }
+  }
+
+  getAccessibleChartLabel() {
+    const w = this.w
+    const cnf = w.config
+
+    // 1. User-supplied description always wins.
+    if (cnf.chart.accessibility && cnf.chart.accessibility.description) {
+      return cnf.chart.accessibility.description
+    }
+
+    // 2. Build a descriptive label from available metadata.
+    const chartType = cnf.chart.type
+    const parts = []
+
+    if (cnf.title.text) {
+      parts.push(`${cnf.title.text}. ${chartType} chart`)
+      if (cnf.subtitle.text) parts.push(cnf.subtitle.text)
+    } else {
+      // Pull series names from config.series when globals isn't populated yet.
+      const namedSeries = (() => {
+        if (
+          Array.isArray(w.seriesData.seriesNames) &&
+          w.seriesData.seriesNames.length
+        ) {
+          return w.seriesData.seriesNames.filter(Boolean)
+        }
+        if (Array.isArray(cnf.series)) {
+          return cnf.series
+            .map((s) => (typeof s === 'object' && s !== null ? s.name : null))
+            .filter(Boolean)
+        }
+        return []
+      })()
+      const seriesCount =
+        w.seriesData.series.length || (cnf.series ? cnf.series.length : 0)
+
+      if (namedSeries.length) {
+        parts.push(
+          `${chartType} chart with ${seriesCount} data series: ${namedSeries.join(', ')}`,
+        )
+      } else {
+        parts.push(`${chartType} chart with ${seriesCount} data series`)
+      }
+    }
+
+    return parts.join('. ')
+  }
+}

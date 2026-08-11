@@ -1,0 +1,83 @@
+import { Basecoat, type Dom, type ModifierKey } from '../../common';
+import type { EventArgs, Graph, GraphPlugin } from '../../graph';
+import type { Cell } from '../../model';
+import { type SelectionImplAddOptions, type SelectionImplCommonOptions, type SelectionImplContent, type SelectionImplEventArgs, type SelectionImplFilter, type SelectionImplOptions, type SelectionImplRemoveOptions, type SelectionImplSetOptions } from './selection';
+import './api';
+export interface SelectionOptions extends SelectionImplCommonOptions {
+    enabled?: boolean;
+}
+export type SelectionFilter = SelectionImplFilter;
+export type SelectionContent = SelectionImplContent;
+export type SelectionSetOptions = SelectionImplSetOptions;
+export type SelectionAddOptions = SelectionImplAddOptions;
+export type SelectionRemoveOptions = SelectionImplRemoveOptions;
+export declare const DefaultOptions: Partial<SelectionImplOptions>;
+export declare class Selection extends Basecoat<SelectionImplEventArgs> implements GraphPlugin {
+    name: string;
+    private graph;
+    private selectionImpl;
+    private readonly options;
+    private movedMap;
+    private unselectMap;
+    get rubberbandDisabled(): boolean;
+    get disabled(): boolean;
+    get length(): number;
+    get cells(): Cell<import("../../model").CellProperties>[];
+    constructor(options?: SelectionOptions);
+    init(graph: Graph): void;
+    isEnabled(): boolean;
+    enable(): void;
+    disable(): void;
+    toggleEnabled(enabled?: boolean): this;
+    isMultipleSelection(): boolean;
+    enableMultipleSelection(): this;
+    disableMultipleSelection(): this;
+    toggleMultipleSelection(multiple?: boolean): this;
+    isSelectionMovable(): boolean;
+    enableSelectionMovable(): this;
+    disableSelectionMovable(): this;
+    toggleSelectionMovable(movable?: boolean): this;
+    isRubberbandEnabled(): boolean;
+    enableRubberband(): this;
+    disableRubberband(): this;
+    toggleRubberband(enabled?: boolean): this;
+    isStrictRubberband(): boolean;
+    enableStrictRubberband(): this;
+    disableStrictRubberband(): this;
+    toggleStrictRubberband(strict?: boolean): this;
+    setRubberbandModifiers(modifiers?: string | ModifierKey[] | null): void;
+    setSelectionFilter(filter?: SelectionFilter): this;
+    setSelectionDisplayContent(content?: SelectionContent): this;
+    isEmpty(): boolean;
+    clean(options?: SelectionSetOptions): this;
+    reset(cells?: Cell | string | (Cell | string)[], options?: SelectionSetOptions): this;
+    getSelectedCells(): Cell<import("../../model").CellProperties>[];
+    getSelectedCellCount(): number;
+    isSelected(cell: Cell | string): boolean;
+    select(cells: Cell | string | (Cell | string)[], options?: SelectionAddOptions): this;
+    unselect(cells: Cell | string | (Cell | string)[], options?: SelectionRemoveOptions): this;
+    protected setup(): void;
+    protected startListening(): void;
+    protected stopListening(): void;
+    protected onBlankMouseDown({ e }: EventArgs['blank:mousedown']): void;
+    protected allowBlankMouseDown(e: Dom.MouseDownEvent): boolean;
+    protected onBlankClick(): void;
+    protected allowRubberband(e: Dom.MouseDownEvent, strict?: boolean): boolean;
+    /**
+     * 当框选和画布拖拽平移触发条件相同时（相同事件 + 相同修饰键），框选优先触发，否则不互相影响。
+     */
+    protected resolvePanningSelectionConflict(): void;
+    protected allowMultipleSelection(e: Dom.MouseDownEvent | Dom.MouseUpEvent): boolean;
+    protected onCellMouseMove({ cell }: EventArgs['cell:mousemove']): void;
+    protected onCellMouseUp({ e, cell }: EventArgs['cell:mouseup']): void;
+    protected onBoxMouseDown({ e, cell, }: SelectionImplEventArgs['box:mousedown']): void;
+    protected getCells(cells: Cell | string | (Cell | string)[]): Cell<import("../../model").CellProperties>[];
+    protected startRubberband(e: Dom.MouseDownEvent): this;
+    protected isMultiple(): boolean;
+    protected enableMultiple(): this;
+    protected disableMultiple(): this;
+    protected setModifiers(modifiers?: string | ModifierKey[] | null): this;
+    protected setContent(content?: SelectionContent): this;
+    protected setFilter(filter?: SelectionFilter): this;
+    dispose(): void;
+}

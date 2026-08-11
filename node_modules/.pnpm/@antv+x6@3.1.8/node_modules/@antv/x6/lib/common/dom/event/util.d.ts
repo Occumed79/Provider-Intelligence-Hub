@@ -1,0 +1,23 @@
+import type { EventTarget } from './store';
+import { EventObject } from './object';
+export declare const returnTrue: () => boolean;
+export declare const returnFalse: () => boolean;
+export declare function stopPropagationCallback(e: Event): void;
+export declare function addEventListener<TElement extends Element>(elem: TElement, type: string, handler: EventListener): void;
+export declare function removeEventListener<TElement extends Element>(elem: TElement, type: string, handler: EventListener): void;
+export declare function splitType(types: string): RegExpMatchArray;
+export declare function normalizeType(type: string): {
+    originType: string;
+    namespaces: string[];
+};
+export declare function isValidTarget(target: Element | Record<string, any>): boolean;
+export declare function isValidSelector(elem: EventTarget, selector?: string): boolean;
+type Handler = (...args: any[]) => void;
+export declare function ensureHandlerId(handler: Handler): number;
+export declare function getHandlerId(handler: Handler): number;
+export declare function removeHandlerId(handler: Handler): boolean;
+export declare function setHandlerId(handler: Handler, id: number): WeakMap<Handler, number>;
+export declare function getHandlerQueue(elem: EventTarget, event: EventObject): any[];
+export declare function isWindow(obj: any): obj is Window;
+export declare function contains(a: any, b: any): boolean;
+export {};

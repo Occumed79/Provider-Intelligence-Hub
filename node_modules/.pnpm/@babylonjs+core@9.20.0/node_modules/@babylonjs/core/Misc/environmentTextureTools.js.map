@@ -1,0 +1,1 @@
+{"version":3,"file":"environmentTextureTools.js","sourceRoot":"","sources":["../../../../dev/core/src/Misc/environmentTextureTools.ts"],"names":[],"mappings":"AAAA,cAAc,gCAAgC,CAAC;AAE/C,OAAO,8CAA8C,CAAC","sourcesContent":["export * from \"./environmentTextureTools.pure\";\n\nimport \"../Materials/Textures/baseTexture.polynomial\";\n"]}

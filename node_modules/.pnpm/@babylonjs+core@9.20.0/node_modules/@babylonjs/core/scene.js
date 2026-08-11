@@ -1,0 +1,8 @@
+/**
+ * Re-exports pure implementation and applies runtime side effects.
+ * Import scene.pure for tree-shakeable, side-effect-free usage.
+ */
+export * from "./scene.pure.js";
+import { RegisterScene } from "./scene.pure.js";
+RegisterScene();
+//# sourceMappingURL=scene.js.map

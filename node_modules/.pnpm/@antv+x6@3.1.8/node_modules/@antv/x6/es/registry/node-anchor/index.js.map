@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/registry/node-anchor/index.ts"],"names":[],"mappings":"AAIA,OAAO,EAAE,QAAQ,EAAE,MAAM,aAAa,CAAA;AACtC,OAAO,KAAK,OAAO,MAAM,QAAQ,CAAA;AAuDjC,MAAM,OAAO,GAAG,OAAO,CAAA;AAEvB,MAAM,CAAC,MAAM,kBAAkB,GAAG,QAAQ,CAAC,MAAM,CAA4B;IAC3E,IAAI,EAAE,eAAe;CACtB,CAAC,CAAA;AAEF,kBAAkB,CAAC,QAAQ,CAAC,OAAO,EAAE,IAAI,CAAC,CAAA"}

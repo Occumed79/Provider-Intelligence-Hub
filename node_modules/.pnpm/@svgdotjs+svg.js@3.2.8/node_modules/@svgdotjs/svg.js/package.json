@@ -1,0 +1,110 @@
+{
+  "name": "@svgdotjs/svg.js",
+  "version": "3.2.8",
+  "packageManager": "pnpm@11.13.0",
+  "type": "module",
+  "description": "A lightweight library for manipulating and animating SVG.",
+  "url": "https://svgjs.dev/",
+  "homepage": "https://svgjs.dev/",
+  "keywords": [
+    "svg",
+    "vector",
+    "graphics",
+    "animation"
+  ],
+  "author": "Wout Fierens <wout@mick-wout.com>",
+  "main": "dist/svg.node.cjs",
+  "unpkg": "dist/svg.min.js",
+  "jsdelivr": "dist/svg.min.js",
+  "browser": "dist/svg.esm.js",
+  "module": "dist/svg.esm.js",
+  "exports": {
+    ".": {
+      "types": "./svg.js.d.ts",
+      "browser": "./dist/svg.esm.js",
+      "import": "./dist/svg.esm.js",
+      "require": "./dist/svg.node.cjs",
+      "default": "./dist/svg.esm.js"
+    }
+  },
+  "files": [
+    "dist",
+    "svg.js.d.ts",
+    "CHANGELOG.md"
+  ],
+  "maintainers": [
+    {
+      "name": "Wout Fierens",
+      "email": "wout@mick-wout.com"
+    },
+    {
+      "name": "Alex Ewerlöf",
+      "email": "alex@userpixel.com",
+      "web": "http://www.ewerlof.name"
+    },
+    {
+      "name": "Ulrich-Matthias Schäfer",
+      "email": "ulima.ums@googlemail.com",
+      "web": "https://svgdotjs.github.io/"
+    },
+    {
+      "name": "Jon Ege Ronnenberg",
+      "email": "jon@svgjs.dev",
+      "url": "https://keybase.io/dotnetcarpenter"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svgdotjs/svg.js.git"
+  },
+  "github": "https://github.com/svgdotjs/svg.js",
+  "license": "MIT",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Fuzzyma"
+  },
+  "typings": "./svg.js.d.ts",
+  "scripts": {
+    "build": "pnpm rolldown",
+    "build:polyfills": "rolldown -c .config/rolldown.polyfills.js",
+    "build:tests": "rolldown -c .config/rolldown.tests.js",
+    "fix": "oxlint -D correctness -A no-unused-expressions --fix ./src",
+    "lint": "oxlint -D correctness -A no-unused-expressions ./src",
+    "format": "pnpm fix && oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "rolldown": "rolldown -c .config/rolldown.config.js",
+    "server": "http-server ./ -d",
+    "test": "karma start .config/karma.conf.cjs",
+    "test:svgdom": "node ./spec/runSVGDomTest.js",
+    "test:package": "node ./spec/package/package-contract.mjs",
+    "zip": "zip -j dist/svg.js.zip -- LICENSE.txt README.md CHANGELOG.md dist/svg.js dist/svg.js.map dist/svg.min.js dist/svg.min.js.map dist/polyfillsIE.js",
+    "prepublishOnly": "pnpm format:check && pnpm lint && pnpm test:package && pnpm test:svgdom && pnpm test",
+    "postpublish": "pnpm zip"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/plugin-transform-runtime": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@babel/runtime": "^8.0.0",
+    "@rolldown/plugin-babel": "^0.2.3",
+    "@rollup/plugin-multi-entry": "^7.1.0",
+    "@target/custom-event-polyfill": "github:Adobe-Marketing-Cloud/custom-event-polyfill",
+    "babel-plugin-polyfill-corejs3": "^1.0.0",
+    "core-js-pure": "^3.49.0",
+    "coveralls-next": "^6.0.2",
+    "http-server": "^14.1.1",
+    "jasmine": "^6.3.0",
+    "jasmine-core": "^6.3.0",
+    "karma": "^6.4.4",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-coverage": "^2.2.1",
+    "karma-firefox-launcher": "^2.1.3",
+    "karma-jasmine": "^5.1.0",
+    "oxfmt": "^0.59.0",
+    "oxlint": "^1.74.0",
+    "rolldown": "^1.2.0",
+    "svgdom": "^0.1.26",
+    "typescript": "^7.0.2"
+  },
+  "browserslist": "defaults"
+}

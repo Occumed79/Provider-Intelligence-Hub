@@ -1,0 +1,1 @@
+{"version":3,"file":"planeRotationGizmo.js","sourceRoot":"","sources":["../../../../dev/core/src/Gizmos/planeRotationGizmo.ts"],"names":[],"mappings":"AAAA,cAAc,2BAA2B,CAAC;AAE1C,OAAO,iCAAiC,CAAC","sourcesContent":["export * from \"./planeRotationGizmo.pure\";\n\nimport \"../Meshes/Builders/linesBuilder\";\n"]}

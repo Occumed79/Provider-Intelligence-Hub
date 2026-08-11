@@ -1,0 +1,1 @@
+{"version":3,"file":"toggle-widget.js","sourceRoot":"","sources":["../../src/widgets/toggle-widget.tsx"],"names":[],"mappings":"AAAA,UAAU;AACV,+BAA+B;AAC/B,oCAAoC;AAEpC,OAAO,EAAC,YAAY,IAAI,aAAa,EAAC,MAAM,kBAAkB,CAAC;AAE/D,OAAO,EAAC,SAAS,EAAC,+BAA4B;AAE9C,MAAM,CAAC,MAAM,YAAY,GAAG,CAAC,KAAwB,EAAE,EAAE;IACvD,SAAS,CAAC,aAAa,EAAE,KAAK,CAAC,CAAC;IAChC,OAAO,IAAI,CAAC;AACd,CAAC,CAAC"}

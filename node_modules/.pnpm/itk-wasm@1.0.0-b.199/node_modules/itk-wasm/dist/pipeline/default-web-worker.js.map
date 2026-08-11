@@ -1,0 +1,1 @@
+{"version":3,"file":"default-web-worker.js","sourceRoot":"","sources":["../../src/pipeline/default-web-worker.ts"],"names":[],"mappings":"AAAA,IAAI,gBAAgB,GAAkB,IAAI,CAAA;AAE1C;;;;IAII;AACJ,MAAM,UAAU,mBAAmB,CAAE,SAAwB;IAC3D,gBAAgB,GAAG,SAAS,CAAA;AAC9B,CAAC;AAED;;;;;IAKI;AACJ,MAAM,UAAU,mBAAmB;IACjC,OAAO,gBAAgB,CAAA;AACzB,CAAC"}

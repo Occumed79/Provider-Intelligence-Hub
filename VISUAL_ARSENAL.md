@@ -1,0 +1,109 @@
+# Visualization Arsenal
+
+Installed by the Occumed79 account-wide visualization library installer.
+
+## Installed npm packages
+- `maplibre-gl`
+- `deck.gl`
+- `leaflet`
+- `ol`
+- `@kepler.gl/components`
+- `@turf/turf`
+- `proj4`
+- `topojson-client`
+- `supercluster`
+- `h3-js`
+- `leaflet.markercluster`
+- `leaflet.heat`
+- `leaflet.vectorgrid`
+- `echarts`
+- `plotly.js`
+- `d3`
+- `vega`
+- `vega-lite`
+- `@observablehq/plot`
+- `chart.js`
+- `apexcharts`
+- `recharts`
+- `@nivo/core`
+- `victory`
+- `@visx/visx`
+- `@antv/g2`
+- `@ant-design/charts`
+- `uplot`
+- `billboard.js`
+- `dygraphs`
+- `frappe-charts`
+- `cytoscape`
+- `sigma`
+- `graphology`
+- `@antv/g6`
+- `@xyflow/react`
+- `vis-network`
+- `d3-force`
+- `elkjs`
+- `dagre`
+- `webcola`
+- `@viz-js/viz`
+- `mermaid`
+- `bpmn-js`
+- `drawflow`
+- `rete`
+- `litegraph.js`
+- `@baklavajs/core`
+- `@logicflow/core`
+- `@antv/x6`
+- `three`
+- `@babylonjs/core`
+- `@react-three/fiber`
+- `@react-three/drei`
+- `pixi.js`
+- `@luma.gl/core`
+- `regl`
+- `ogl`
+- `aframe`
+- `@threlte/core`
+- `@tresjs/core`
+- `p5`
+- `gsap`
+- `motion`
+- `lottie-web`
+- `animejs`
+- `@react-spring/web`
+- `@formkit/auto-animate`
+- `@theatre/core`
+- `popmotion`
+- `lenis`
+- `@barba/core`
+- `matter-js`
+- `@dimforge/rapier3d`
+- `cannon-es`
+- `ammojs-typed`
+- `planck`
+- `oimo`
+- `tsparticles`
+- `particles.js`
+- `konva`
+- `fabric`
+- `paper`
+- `two.js`
+- `roughjs`
+- `@svgdotjs/svg.js`
+- `@cornerstonejs/core`
+- `@ohif/core`
+- `@kitware/vtk.js`
+- `@niivue/niivue`
+- `openseadragon`
+- `3dmol`
+- `molstar`
+- `ngl`
+- `dicom-parser`
+- `papaya-viewer`
+- `itk-wasm`
+
+## Requested technologies that are built-in standards/formats, not packages
+- GeoJSON — data format
+- WebGL — browser graphics API
+- WebGPU — browser graphics API
+- GLSL — shader language
+- WGSL — shader language

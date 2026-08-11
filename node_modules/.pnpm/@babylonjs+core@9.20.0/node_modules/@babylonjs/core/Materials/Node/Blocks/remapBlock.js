@@ -1,0 +1,8 @@
+/**
+ * Re-exports pure implementation and applies runtime side effects.
+ * Import remapBlock.pure for tree-shakeable, side-effect-free usage.
+ */
+export * from "./remapBlock.pure.js";
+import { RegisterRemapBlock } from "./remapBlock.pure.js";
+RegisterRemapBlock();
+//# sourceMappingURL=remapBlock.js.map

@@ -1,0 +1,76 @@
+/*
+ * Copyright (c) Flowmap.gl contributors
+ * Copyright (c) 2018-2020 Teralytics
+ * SPDX-License-Identifier: Apache-2.0
+ */
+export default `\
+#version 300 es
+#define SHADER_NAME animated-flow-lines-layer-vertex-shader
+#define SPEED 0.015
+#define NUM_PARTS 5.0
+
+in vec3 positions;
+in vec3 instanceSourcePositions;
+in vec3 instanceTargetPositions;
+in vec3 instanceSourcePositions64Low;
+in vec3 instanceTargetPositions64Low;
+in vec4 instanceColors;
+in vec3 instancePickingColors;
+in float instanceWidths;
+in float instancePickable;
+in float instanceStaggering;
+
+out vec4 vColor;
+out float sourceToTarget;
+out vec2 uv;
+
+// offset vector by strokeWidth pixels
+// offset_direction is -1 (left) or 1 (right)
+vec2 getExtrusionOffset(vec2 line_clipspace, float offset_direction, float width) {
+  // normalized direction of the line
+  vec2 dir_screenspace = normalize(line_clipspace * project.viewportSize);
+  // rotate by 90 degrees
+  dir_screenspace = vec2(-dir_screenspace.y, dir_screenspace.x);
+
+  return dir_screenspace * offset_direction * width / 2.0;
+}
+
+void main(void) {
+  geometry.worldPosition = instanceSourcePositions;
+  geometry.worldPositionAlt = instanceTargetPositions;
+
+  // Position
+  vec4 source_commonspace;
+  vec4 target_commonspace;
+  vec4 source = project_position_to_clipspace(instanceSourcePositions, instanceSourcePositions64Low, vec3(0.), source_commonspace);
+  vec4 target = project_position_to_clipspace(instanceTargetPositions, instanceTargetPositions64Low, vec3(0.), target_commonspace);
+
+  float widthPixels = instanceWidths * animatedFlowLines.thicknessUnit;
+  
+  
+  // linear interpolation of source & target to pick right coord
+  float segmentIndex = positions.x;
+  vec4 p = mix(source, target, segmentIndex);
+  geometry.position = mix(source_commonspace, target_commonspace, segmentIndex);
+  uv = positions.xy;
+  geometry.uv = uv;
+  if (instancePickable > 0.5) {
+    geometry.pickingColor = instancePickingColors;
+  }
+  
+  // extrude
+  vec3 offset = vec3(
+    getExtrusionOffset(target.xy - source.xy, positions.y, widthPixels),
+    0.0);
+  DECKGL_FILTER_SIZE(offset, geometry);
+  gl_Position = p + vec4(project_pixel_size_to_clipspace(offset.xy), 0.0, 0.0);
+  DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
+
+  // Color
+  vColor = vec4(instanceColors.rgb, instanceColors.a * layer.opacity);
+  DECKGL_FILTER_COLOR(vColor, geometry);
+
+  sourceToTarget = positions.x * length(source - target) * NUM_PARTS - animatedFlowLines.currentTime * SPEED + instanceStaggering; 
+}
+`;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiQW5pbWF0ZWRGbG93TGluZXNMYXllclZlcnRleC5nbHNsLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vc3JjL0FuaW1hdGVkRmxvd0xpbmVzTGF5ZXIvQW5pbWF0ZWRGbG93TGluZXNMYXllclZlcnRleC5nbHNsLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7O0dBSUc7QUFDSCxlQUFlOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Q0FxRWQsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbIi8qXG4gKiBDb3B5cmlnaHQgKGMpIEZsb3dtYXAuZ2wgY29udHJpYnV0b3JzXG4gKiBDb3B5cmlnaHQgKGMpIDIwMTgtMjAyMCBUZXJhbHl0aWNzXG4gKiBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogQXBhY2hlLTIuMFxuICovXG5leHBvcnQgZGVmYXVsdCBgXFxcbiN2ZXJzaW9uIDMwMCBlc1xuI2RlZmluZSBTSEFERVJfTkFNRSBhbmltYXRlZC1mbG93LWxpbmVzLWxheWVyLXZlcnRleC1zaGFkZXJcbiNkZWZpbmUgU1BFRUQgMC4wMTVcbiNkZWZpbmUgTlVNX1BBUlRTIDUuMFxuXG5pbiB2ZWMzIHBvc2l0aW9ucztcbmluIHZlYzMgaW5zdGFuY2VTb3VyY2VQb3NpdGlvbnM7XG5pbiB2ZWMzIGluc3RhbmNlVGFyZ2V0UG9zaXRpb25zO1xuaW4gdmVjMyBpbnN0YW5jZVNvdXJjZVBvc2l0aW9uczY0TG93O1xuaW4gdmVjMyBpbnN0YW5jZVRhcmdldFBvc2l0aW9uczY0TG93O1xuaW4gdmVjNCBpbnN0YW5jZUNvbG9ycztcbmluIHZlYzMgaW5zdGFuY2VQaWNraW5nQ29sb3JzO1xuaW4gZmxvYXQgaW5zdGFuY2VXaWR0aHM7XG5pbiBmbG9hdCBpbnN0YW5jZVBpY2thYmxlO1xuaW4gZmxvYXQgaW5zdGFuY2VTdGFnZ2VyaW5nO1xuXG5vdXQgdmVjNCB2Q29sb3I7XG5vdXQgZmxvYXQgc291cmNlVG9UYXJnZXQ7XG5vdXQgdmVjMiB1djtcblxuLy8gb2Zmc2V0IHZlY3RvciBieSBzdHJva2VXaWR0aCBwaXhlbHNcbi8vIG9mZnNldF9kaXJlY3Rpb24gaXMgLTEgKGxlZnQpIG9yIDEgKHJpZ2h0KVxudmVjMiBnZXRFeHRydXNpb25PZmZzZXQodmVjMiBsaW5lX2NsaXBzcGFjZSwgZmxvYXQgb2Zmc2V0X2RpcmVjdGlvbiwgZmxvYXQgd2lkdGgpIHtcbiAgLy8gbm9ybWFsaXplZCBkaXJlY3Rpb24gb2YgdGhlIGxpbmVcbiAgdmVjMiBkaXJfc2NyZWVuc3BhY2UgPSBub3JtYWxpemUobGluZV9jbGlwc3BhY2UgKiBwcm9qZWN0LnZpZXdwb3J0U2l6ZSk7XG4gIC8vIHJvdGF0ZSBieSA5MCBkZWdyZWVzXG4gIGRpcl9zY3JlZW5zcGFjZSA9IHZlYzIoLWRpcl9zY3JlZW5zcGFjZS55LCBkaXJfc2NyZWVuc3BhY2UueCk7XG5cbiAgcmV0dXJuIGRpcl9zY3JlZW5zcGFjZSAqIG9mZnNldF9kaXJlY3Rpb24gKiB3aWR0aCAvIDIuMDtcbn1cblxudm9pZCBtYWluKHZvaWQpIHtcbiAgZ2VvbWV0cnkud29ybGRQb3NpdGlvbiA9IGluc3RhbmNlU291cmNlUG9zaXRpb25zO1xuICBnZW9tZXRyeS53b3JsZFBvc2l0aW9uQWx0ID0gaW5zdGFuY2VUYXJnZXRQb3NpdGlvbnM7XG5cbiAgLy8gUG9zaXRpb25cbiAgdmVjNCBzb3VyY2VfY29tbW9uc3BhY2U7XG4gIHZlYzQgdGFyZ2V0X2NvbW1vbnNwYWNlO1xuICB2ZWM0IHNvdXJjZSA9IHByb2plY3RfcG9zaXRpb25fdG9fY2xpcHNwYWNlKGluc3RhbmNlU291cmNlUG9zaXRpb25zLCBpbnN0YW5jZVNvdXJjZVBvc2l0aW9uczY0TG93LCB2ZWMzKDAuKSwgc291cmNlX2NvbW1vbnNwYWNlKTtcbiAgdmVjNCB0YXJnZXQgPSBwcm9qZWN0X3Bvc2l0aW9uX3RvX2NsaXBzcGFjZShpbnN0YW5jZVRhcmdldFBvc2l0aW9ucywgaW5zdGFuY2VUYXJnZXRQb3NpdGlvbnM2NExvdywgdmVjMygwLiksIHRhcmdldF9jb21tb25zcGFjZSk7XG5cbiAgZmxvYXQgd2lkdGhQaXhlbHMgPSBpbnN0YW5jZVdpZHRocyAqIGFuaW1hdGVkRmxvd0xpbmVzLnRoaWNrbmVzc1VuaXQ7XG4gIFxuICBcbiAgLy8gbGluZWFyIGludGVycG9sYXRpb24gb2Ygc291cmNlICYgdGFyZ2V0IHRvIHBpY2sgcmlnaHQgY29vcmRcbiAgZmxvYXQgc2VnbWVudEluZGV4ID0gcG9zaXRpb25zLng7XG4gIHZlYzQgcCA9IG1peChzb3VyY2UsIHRhcmdldCwgc2VnbWVudEluZGV4KTtcbiAgZ2VvbWV0cnkucG9zaXRpb24gPSBtaXgoc291cmNlX2NvbW1vbnNwYWNlLCB0YXJnZXRfY29tbW9uc3BhY2UsIHNlZ21lbnRJbmRleCk7XG4gIHV2ID0gcG9zaXRpb25zLnh5O1xuICBnZW9tZXRyeS51diA9IHV2O1xuICBpZiAoaW5zdGFuY2VQaWNrYWJsZSA+IDAuNSkge1xuICAgIGdlb21ldHJ5LnBpY2tpbmdDb2xvciA9IGluc3RhbmNlUGlja2luZ0NvbG9ycztcbiAgfVxuICBcbiAgLy8gZXh0cnVkZVxuICB2ZWMzIG9mZnNldCA9IHZlYzMoXG4gICAgZ2V0RXh0cnVzaW9uT2Zmc2V0KHRhcmdldC54eSAtIHNvdXJjZS54eSwgcG9zaXRpb25zLnksIHdpZHRoUGl4ZWxzKSxcbiAgICAwLjApO1xuICBERUNLR0xfRklMVEVSX1NJWkUob2Zmc2V0LCBnZW9tZXRyeSk7XG4gIGdsX1Bvc2l0aW9uID0gcCArIHZlYzQocHJvamVjdF9waXhlbF9zaXplX3RvX2NsaXBzcGFjZShvZmZzZXQueHkpLCAwLjAsIDAuMCk7XG4gIERFQ0tHTF9GSUxURVJfR0xfUE9TSVRJT04oZ2xfUG9zaXRpb24sIGdlb21ldHJ5KTtcblxuICAvLyBDb2xvclxuICB2Q29sb3IgPSB2ZWM0KGluc3RhbmNlQ29sb3JzLnJnYiwgaW5zdGFuY2VDb2xvcnMuYSAqIGxheWVyLm9wYWNpdHkpO1xuICBERUNLR0xfRklMVEVSX0NPTE9SKHZDb2xvciwgZ2VvbWV0cnkpO1xuXG4gIHNvdXJjZVRvVGFyZ2V0ID0gcG9zaXRpb25zLnggKiBsZW5ndGgoc291cmNlIC0gdGFyZ2V0KSAqIE5VTV9QQVJUUyAtIGFuaW1hdGVkRmxvd0xpbmVzLmN1cnJlbnRUaW1lICogU1BFRUQgKyBpbnN0YW5jZVN0YWdnZXJpbmc7IFxufVxuYDtcbiJdfQ==

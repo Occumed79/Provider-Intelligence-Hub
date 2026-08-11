@@ -1,0 +1,1 @@
+{"version":3,"file":"effect.js","sourceRoot":"","sources":["../../../../dev/core/src/Materials/effect.ts"],"names":[],"mappings":"AAAA,cAAc,eAAe,CAAC","sourcesContent":["export * from \"./effect.pure\";\n"]}

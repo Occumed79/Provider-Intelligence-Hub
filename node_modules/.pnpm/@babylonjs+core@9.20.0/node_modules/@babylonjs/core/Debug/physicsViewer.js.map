@@ -1,0 +1,1 @@
+{"version":3,"file":"physicsViewer.js","sourceRoot":"","sources":["../../../../dev/core/src/Debug/physicsViewer.ts"],"names":[],"mappings":"AAAA,cAAc,sBAAsB,CAAC;AAErC,OAAO,yCAAyC,CAAC","sourcesContent":["export * from \"./physicsViewer.pure\";\n\nimport \"../Physics/joinedPhysicsEngineComponent\";\n"]}

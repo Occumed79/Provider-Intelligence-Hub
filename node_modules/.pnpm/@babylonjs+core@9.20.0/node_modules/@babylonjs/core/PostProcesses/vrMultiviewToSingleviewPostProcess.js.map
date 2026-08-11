@@ -1,0 +1,1 @@
+{"version":3,"file":"vrMultiviewToSingleviewPostProcess.js","sourceRoot":"","sources":["../../../../dev/core/src/PostProcesses/vrMultiviewToSingleviewPostProcess.ts"],"names":[],"mappings":"AAAA,cAAc,2CAA2C,CAAC;AAE1D,OAAO,6CAA6C,CAAC","sourcesContent":["export * from \"./vrMultiviewToSingleviewPostProcess.pure\";\n\nimport \"../Shaders/vrMultiviewToSingleview.fragment\";\n"]}

@@ -1,0 +1,11 @@
+import LogicFlow from '../LogicFlow';
+import GraphModel from '../model/GraphModel';
+import NodeData = LogicFlow.NodeData;
+import EdgeData = LogicFlow.EdgeData;
+import NodeConfig = LogicFlow.NodeConfig;
+import EdgeConfig = LogicFlow.EdgeConfig;
+export declare function translateNodeData(nodeData: NodeData, distance: number): LogicFlow.NodeData;
+export declare function translateEdgeData(edgeData: EdgeData, distance: number): LogicFlow.EdgeData;
+export declare function transformNodeData(nodeData: NodeData, distance: number): NodeConfig;
+export declare function transformEdgeData(edgeData: EdgeData, distance: number): EdgeConfig;
+export declare function initDefaultShortcut(lf: LogicFlow, graph: GraphModel): void;

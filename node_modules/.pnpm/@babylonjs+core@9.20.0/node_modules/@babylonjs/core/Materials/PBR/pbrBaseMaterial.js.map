@@ -1,0 +1,1 @@
+{"version":3,"file":"pbrBaseMaterial.js","sourceRoot":"","sources":["../../../../../dev/core/src/Materials/PBR/pbrBaseMaterial.ts"],"names":[],"mappings":"AAAA,cAAc,wBAAwB,CAAC;AAEvC,OAAO,iDAAiD,CAAC","sourcesContent":["export * from \"./pbrBaseMaterial.pure\";\n\nimport \"../../Materials/Textures/baseTexture.polynomial\";\n"]}

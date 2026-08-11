@@ -1,0 +1,1 @@
+{"version":3,"file":"subMesh.js","sourceRoot":"","sources":["../../../../dev/core/src/Meshes/subMesh.ts"],"names":[],"mappings":"AAAA,cAAc,gBAAgB,CAAC","sourcesContent":["export * from \"./subMesh.pure\";\n"]}

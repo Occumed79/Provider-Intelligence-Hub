@@ -1,0 +1,8 @@
+/**
+ * Re-exports pure implementation and applies runtime side effects.
+ * Import imageSourceBlock.pure for tree-shakeable, side-effect-free usage.
+ */
+export * from "./imageSourceBlock.pure.js";
+import { RegisterImageSourceBlock } from "./imageSourceBlock.pure.js";
+RegisterImageSourceBlock();
+//# sourceMappingURL=imageSourceBlock.js.map

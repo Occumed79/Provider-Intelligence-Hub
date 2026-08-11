@@ -1,0 +1,8 @@
+/**
+ * Re-exports pure implementation and applies runtime side effects.
+ * Import conditionalBlock.pure for tree-shakeable, side-effect-free usage.
+ */
+export * from "./conditionalBlock.pure.js";
+import { RegisterConditionalBlock } from "./conditionalBlock.pure.js";
+RegisterConditionalBlock();
+//# sourceMappingURL=conditionalBlock.js.map

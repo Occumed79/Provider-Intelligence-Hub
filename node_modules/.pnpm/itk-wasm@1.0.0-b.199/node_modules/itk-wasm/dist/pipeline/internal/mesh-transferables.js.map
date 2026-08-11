@@ -1,0 +1,1 @@
+{"version":3,"file":"mesh-transferables.js","sourceRoot":"","sources":["../../../src/pipeline/internal/mesh-transferables.ts"],"names":[],"mappings":"AAGA,SAAS,iBAAiB,CAAE,IAAU;IACpC,OAAO;QACL,IAAI,CAAC,MAAM;QACX,IAAI,CAAC,SAAS;QACd,IAAI,CAAC,KAAK;QACV,IAAI,CAAC,QAAQ;KACd,CAAA;AACH,CAAC;AAED,eAAe,iBAAiB,CAAA"}

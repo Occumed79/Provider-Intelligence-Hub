@@ -1,0 +1,10 @@
+import { type PointLike } from '../../geometry';
+import type { TerminalCellData } from '../../model';
+import type { EdgeView, NodeView } from '../../view';
+import type { ConnectionStrategyDefinition } from './index';
+export declare function toPercentage(value: number, max: number): string;
+export declare function pin(relative: boolean): (terminal: any, view: any, magnet: any, coords: any) => TerminalCellData;
+export declare function pinNodeTerminal(relative: boolean, data: TerminalCellData, view: NodeView, magnet: Element, coords: PointLike): TerminalCellData;
+export declare function pinEdgeTerminal(relative: boolean, end: TerminalCellData, view: EdgeView, magnet: Element, coords: PointLike): TerminalCellData;
+export declare const pinRelative: ConnectionStrategyDefinition;
+export declare const pinAbsolute: ConnectionStrategyDefinition;

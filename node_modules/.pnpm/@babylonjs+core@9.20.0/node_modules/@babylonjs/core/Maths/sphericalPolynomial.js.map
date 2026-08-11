@@ -1,0 +1,1 @@
+{"version":3,"file":"sphericalPolynomial.js","sourceRoot":"","sources":["../../../../dev/core/src/Maths/sphericalPolynomial.ts"],"names":[],"mappings":"AAAA,cAAc,4BAA4B,CAAC","sourcesContent":["export * from \"./sphericalPolynomial.pure\";\n"]}

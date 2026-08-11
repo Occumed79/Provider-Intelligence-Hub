@@ -1,0 +1,52 @@
+import { type IDisablable, Vector } from '../../common';
+import { type RectangleLike } from '../../geometry';
+import type { EventArgs, Graph } from '../../graph';
+import type { ModelEventArgs, Node, ResizeOptions } from '../../model';
+import { type CellView, type NodeView, View } from '../../view';
+import type { SnaplineImplFilter, SnaplineImplOptions } from './type';
+import type { PointLike } from '../../types';
+export declare class SnaplineImpl extends View implements IDisablable {
+    readonly options: SnaplineImplOptions;
+    protected readonly graph: Graph;
+    protected offset: PointLike;
+    protected timer: number | null;
+    container: SVGElement;
+    protected containerWrapper: Vector;
+    protected horizontal: Vector;
+    protected vertical: Vector;
+    protected get model(): import("../../model").Model;
+    protected get containerClassName(): string;
+    protected get verticalClassName(): string;
+    protected get horizontalClassName(): string;
+    constructor(options: SnaplineImplOptions & {
+        graph: Graph;
+    });
+    get disabled(): boolean;
+    enable(): void;
+    disable(): void;
+    setFilter(filter?: SnaplineImplFilter): void;
+    protected render(): void;
+    protected startListening(): void;
+    protected stopListening(): void;
+    protected onBatchStop({ name, data }: ModelEventArgs['batch:stop']): void;
+    captureCursorOffset({ view, x, y }: EventArgs['node:mousedown']): void;
+    protected isNodeMovable(view: CellView): boolean;
+    protected getRestrictArea(view?: NodeView): RectangleLike | null;
+    protected snapOnResizing(node: Node, options: ResizeOptions): void;
+    snapOnMoving({ view, e, x, y }: EventArgs['node:mousemove']): void;
+    protected isIgnored(snapNode: Node, targetNode: Node): boolean;
+    protected filter(node: Node): boolean;
+    protected update(metadata: {
+        verticalLeft?: number;
+        verticalTop?: number;
+        verticalHeight?: number;
+        horizontalTop?: number;
+        horizontalLeft?: number;
+        horizontalWidth?: number;
+    }): void;
+    protected resetTimer(): void;
+    show(): this;
+    hide(): this;
+    protected onRemove(): void;
+    dispose(): void;
+}

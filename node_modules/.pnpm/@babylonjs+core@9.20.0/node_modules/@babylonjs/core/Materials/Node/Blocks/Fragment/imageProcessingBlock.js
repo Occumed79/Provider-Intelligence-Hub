@@ -1,0 +1,8 @@
+/**
+ * Re-exports pure implementation and applies runtime side effects.
+ * Import imageProcessingBlock.pure for tree-shakeable, side-effect-free usage.
+ */
+export * from "./imageProcessingBlock.pure.js";
+import { RegisterImageProcessingBlock } from "./imageProcessingBlock.pure.js";
+RegisterImageProcessingBlock();
+//# sourceMappingURL=imageProcessingBlock.js.map

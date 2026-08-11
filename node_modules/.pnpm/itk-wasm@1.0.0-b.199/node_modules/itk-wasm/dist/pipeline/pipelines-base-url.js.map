@@ -1,0 +1,1 @@
+{"version":3,"file":"pipelines-base-url.js","sourceRoot":"","sources":["../../src/pipeline/pipelines-base-url.ts"],"names":[],"mappings":"AAAA,IAAI,gBAA0C,CAAA;AAE9C,MAAM,UAAU,mBAAmB,CAAE,OAAqB;IACxD,gBAAgB,GAAG,OAAO,CAAA;AAC5B,CAAC;AAED,MAAM,UAAU,mBAAmB;IACjC,OAAO,gBAAgB,CAAA;AACzB,CAAC"}

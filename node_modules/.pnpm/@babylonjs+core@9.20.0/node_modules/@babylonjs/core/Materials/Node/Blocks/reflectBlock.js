@@ -1,0 +1,8 @@
+/**
+ * Re-exports pure implementation and applies runtime side effects.
+ * Import reflectBlock.pure for tree-shakeable, side-effect-free usage.
+ */
+export * from "./reflectBlock.pure.js";
+import { RegisterReflectBlock } from "./reflectBlock.pure.js";
+RegisterReflectBlock();
+//# sourceMappingURL=reflectBlock.js.map

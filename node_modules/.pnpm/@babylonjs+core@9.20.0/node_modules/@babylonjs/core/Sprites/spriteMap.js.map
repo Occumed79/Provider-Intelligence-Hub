@@ -1,0 +1,1 @@
+{"version":3,"file":"spriteMap.js","sourceRoot":"","sources":["../../../../dev/core/src/Sprites/spriteMap.ts"],"names":[],"mappings":"AAAA,cAAc,kBAAkB,CAAC;AAEjC,OAAO,+BAA+B,CAAC;AACvC,OAAO,6BAA6B,CAAC","sourcesContent":["export * from \"./spriteMap.pure\";\n\nimport \"../Shaders/spriteMap.fragment\";\nimport \"../Shaders/spriteMap.vertex\";\n"]}

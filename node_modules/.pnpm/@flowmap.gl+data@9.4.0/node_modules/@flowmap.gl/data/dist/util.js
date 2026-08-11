@@ -1,0 +1,16 @@
+/*
+ * Copyright (c) Flowmap.gl contributors
+ * Copyright (c) 2018-2020 Teralytics
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import { createSelectorCreator, lruMemoize } from 'reselect';
+export const createDebugSelector = createSelectorCreator(lruMemoize, {
+    equalityCheck: (previousVal, currentVal) => {
+        const rv = currentVal === previousVal;
+        if (!rv) {
+            console.log('Selector param value changed', currentVal);
+        }
+        return rv;
+    },
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidXRpbC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uL3NyYy91dGlsLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBOzs7O0dBSUc7QUFFSCxPQUFPLEVBQUMscUJBQXFCLEVBQUUsVUFBVSxFQUFDLE1BQU0sVUFBVSxDQUFDO0FBRTNELE1BQU0sQ0FBQyxNQUFNLG1CQUFtQixHQUFHLHFCQUFxQixDQUFDLFVBQVUsRUFBRTtJQUNuRSxhQUFhLEVBQUUsQ0FBQyxXQUFnQixFQUFFLFVBQWUsRUFBRSxFQUFFO1FBQ25ELE1BQU0sRUFBRSxHQUFHLFVBQVUsS0FBSyxXQUFXLENBQUM7UUFDdEMsSUFBSSxDQUFDLEVBQUUsRUFBRSxDQUFDO1lBQ1IsT0FBTyxDQUFDLEdBQUcsQ0FBQyw4QkFBOEIsRUFBRSxVQUFVLENBQUMsQ0FBQztRQUMxRCxDQUFDO1FBQ0QsT0FBTyxFQUFFLENBQUM7SUFDWixDQUFDO0NBQ0YsQ0FBQyxDQUFDIiwic291cmNlc0NvbnRlbnQiOlsiLypcbiAqIENvcHlyaWdodCAoYykgRmxvd21hcC5nbCBjb250cmlidXRvcnNcbiAqIENvcHlyaWdodCAoYykgMjAxOC0yMDIwIFRlcmFseXRpY3NcbiAqIFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBBcGFjaGUtMi4wXG4gKi9cblxuaW1wb3J0IHtjcmVhdGVTZWxlY3RvckNyZWF0b3IsIGxydU1lbW9pemV9IGZyb20gJ3Jlc2VsZWN0JztcblxuZXhwb3J0IGNvbnN0IGNyZWF0ZURlYnVnU2VsZWN0b3IgPSBjcmVhdGVTZWxlY3RvckNyZWF0b3IobHJ1TWVtb2l6ZSwge1xuICBlcXVhbGl0eUNoZWNrOiAocHJldmlvdXNWYWw6IGFueSwgY3VycmVudFZhbDogYW55KSA9PiB7XG4gICAgY29uc3QgcnYgPSBjdXJyZW50VmFsID09PSBwcmV2aW91c1ZhbDtcbiAgICBpZiAoIXJ2KSB7XG4gICAgICBjb25zb2xlLmxvZygnU2VsZWN0b3IgcGFyYW0gdmFsdWUgY2hhbmdlZCcsIGN1cnJlbnRWYWwpO1xuICAgIH1cbiAgICByZXR1cm4gcnY7XG4gIH0sXG59KTtcbiJdfQ==

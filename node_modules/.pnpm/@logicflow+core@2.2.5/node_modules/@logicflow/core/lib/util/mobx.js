@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.reaction = exports.configure = exports.toJS = exports.isObservable = exports.computed = exports.observable = exports.action = void 0;
+var mobx_1 = require("mobx");
+Object.defineProperty(exports, "action", { enumerable: true, get: function () { return mobx_1.action; } });
+Object.defineProperty(exports, "observable", { enumerable: true, get: function () { return mobx_1.observable; } });
+Object.defineProperty(exports, "computed", { enumerable: true, get: function () { return mobx_1.computed; } });
+Object.defineProperty(exports, "toJS", { enumerable: true, get: function () { return mobx_1.toJS; } });
+Object.defineProperty(exports, "isObservable", { enumerable: true, get: function () { return mobx_1.isObservable; } });
+Object.defineProperty(exports, "configure", { enumerable: true, get: function () { return mobx_1.configure; } });
+Object.defineProperty(exports, "reaction", { enumerable: true, get: function () { return mobx_1.reaction; } });
+(0, mobx_1.configure)({ isolateGlobalState: true });

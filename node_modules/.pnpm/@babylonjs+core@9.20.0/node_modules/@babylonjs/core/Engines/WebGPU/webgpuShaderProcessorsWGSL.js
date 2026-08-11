@@ -1,0 +1,11 @@
+export * from "./webgpuShaderProcessorsWGSL.pure.js";
+import "../../ShadersWGSL/ShadersInclude/bakedVertexAnimationDeclaration.js";
+import "../../ShadersWGSL/ShadersInclude/bakedVertexAnimation.js";
+import "../../ShadersWGSL/ShadersInclude/instancesDeclaration.js";
+import "../../ShadersWGSL/ShadersInclude/instancesVertex.js";
+import "../../ShadersWGSL/ShadersInclude/helperFunctions.js";
+import "../../ShadersWGSL/ShadersInclude/fresnelFunction.js";
+import "../../ShadersWGSL/ShadersInclude/meshUboDeclaration.js";
+import "../../ShadersWGSL/ShadersInclude/sceneUboDeclaration.js";
+import "../../ShadersWGSL/ShadersInclude/decalFragment.js";
+//# sourceMappingURL=webgpuShaderProcessorsWGSL.js.map

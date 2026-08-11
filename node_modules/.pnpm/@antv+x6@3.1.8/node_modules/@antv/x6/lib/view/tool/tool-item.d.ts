@@ -1,0 +1,52 @@
+import { Dom, type KeyValue } from '../../common';
+import type { ViewEvents } from '../../types';
+import type { CellView } from '../cell';
+import { type MarkupType } from '../markup';
+import { View } from '../view';
+import type { ToolsView } from './tool-view';
+export interface ToolItemOptions {
+    name?: string;
+    tagName?: string;
+    isSVGElement?: boolean;
+    className?: string;
+    markup?: Exclude<MarkupType, string>;
+    events?: ViewEvents | null;
+    documentEvents?: ViewEvents | null;
+    focusOpacity?: number;
+}
+export type ToolItemDefinition = typeof ToolItem | (new (options: ToolItemOptions) => ToolItem);
+export declare class ToolItem<TargetView extends CellView = CellView, Options extends ToolItemOptions = ToolItemOptions> extends View {
+    static toStringTag: string;
+    static defaults: ToolItemOptions;
+    static isToolItem(instance: any): instance is ToolItem;
+    static define<T extends ToolItemOptions>(options: T): typeof ToolItem;
+    static getDefaults<T extends ToolItemOptions>(): T;
+    static config<T extends ToolItemOptions = ToolItemOptions>(options: Partial<T>): void;
+    static getOptions<T extends ToolItemOptions = ToolItemOptions>(options: Partial<T>): T;
+    readonly options: Options;
+    container: HTMLElement | SVGElement;
+    parent: ToolsView;
+    protected cellView: TargetView;
+    protected visible: boolean;
+    protected childNodes: KeyValue<Element>;
+    get graph(): import("../..").Graph;
+    get cell(): import("../..").Cell<import("../..").CellProperties>;
+    get name(): string;
+    protected get [Symbol.toStringTag](): string;
+    constructor(options?: Partial<Options>);
+    protected init(): void;
+    protected getOptions(options: Partial<Options>): Options;
+    delegateEvents(): this;
+    config(view: CellView, toolsView: ToolsView): this;
+    render(): this;
+    protected onRender(): void;
+    update(): this;
+    protected stamp(elem: Element): void;
+    show(): this;
+    hide(): this;
+    isVisible(): boolean;
+    focus(): this;
+    blur(): this;
+    protected guard(evt: Dom.EventObject): any;
+}
+export declare const ToolItemToStringTag: string;

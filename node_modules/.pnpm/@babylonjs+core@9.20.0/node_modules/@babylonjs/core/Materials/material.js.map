@@ -1,0 +1,1 @@
+{"version":3,"file":"material.js","sourceRoot":"","sources":["../../../../dev/core/src/Materials/material.ts"],"names":[],"mappings":"AAAA,cAAc,iBAAiB,CAAC","sourcesContent":["export * from \"./material.pure\";\n"]}

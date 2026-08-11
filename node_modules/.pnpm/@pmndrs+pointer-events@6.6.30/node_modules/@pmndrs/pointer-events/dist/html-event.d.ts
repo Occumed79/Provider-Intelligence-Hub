@@ -1,0 +1,44 @@
+export type Properties<T> = {
+    [K in keyof T as T[K] extends (...args: Array<any>) => any ? never : K]: T[K];
+};
+export declare class HtmlEvent<E extends object> implements Properties<Omit<globalThis.PointerEvent | globalThis.MouseEvent | globalThis.WheelEvent, 'target' | 'currentTarget' | 'bubbles' | 'srcElement' | 'type'>> {
+    readonly nativeEvent: E;
+    NONE: 0;
+    CAPTURING_PHASE: 1;
+    AT_TARGET: 2;
+    BUBBLING_PHASE: 3;
+    relatedTarget: null;
+    get altKey(): boolean;
+    get button(): number;
+    get buttons(): number;
+    get clientX(): number;
+    get clientY(): number;
+    get ctrlKey(): boolean;
+    get layerX(): number;
+    get layerY(): number;
+    get metaKey(): boolean;
+    get movementX(): number;
+    get movementY(): number;
+    get offsetX(): number;
+    get offsetY(): number;
+    get pageX(): number;
+    get pageY(): number;
+    get screenX(): number;
+    get screenY(): number;
+    get shiftKey(): boolean;
+    get x(): number;
+    get y(): number;
+    get detail(): number;
+    get view(): Window | null;
+    get which(): number;
+    get cancelBubble(): boolean;
+    get composed(): boolean;
+    get eventPhase(): number;
+    get isTrusted(): boolean;
+    get returnValue(): boolean;
+    get timeStamp(): number;
+    get cancelable(): boolean;
+    get defaultPrevented(): boolean;
+    constructor(nativeEvent: E);
+    getFromNative<T>(key: string, defaultValue: T): T;
+}
