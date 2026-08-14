@@ -75,6 +75,7 @@
   },
   "dependencies": {
     "@types/topojson-specification": "^1.0.5",
+    "prop-types": "^15.8.1",
     "react-simple-maps": "^3.0.0"
   }
 }
