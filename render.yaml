@@ -1,20 +1,27 @@
 services:
   - type: web
-    name: provider-intelligence-hub-api
+    name: Network-Development-Hub
     runtime: node
     repo: https://github.com/Occumed79/Provider-Intelligence-Hub
     branch: main
     plan: free
-    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/api-server build
-    startCommand: pnpm --filter @workspace/api-server start
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --no-frozen-lockfile --ignore-scripts=false &&
+      pnpm rebuild esbuild &&
+      PORT=3000 BASE_PATH=/ pnpm --filter @workspace/occu-med-hub build &&
+      pnpm --filter @workspace/api-server build
+    startCommand: >-
+      pnpm --filter @workspace/db push &&
+      pnpm --filter @workspace/api-server start
     envVars:
       - key: NODE_VERSION
         value: 22
       - key: NODE_ENV
         value: production
+      - key: BASE_PATH
+        value: /
       - key: DATABASE_URL
-        sync: false
-      - key: FRONTEND_ORIGIN
         sync: false
       - key: LLAMA_CLOUD_API_KEY
         sync: false
@@ -43,23 +50,4 @@ services:
       - key: OPTIIC_API_KEY_3
         sync: false
       - key: OPTIIC_API_KEY_4
-        sync: false
-
-  - type: web
-    name: provider-intelligence-hub-frontend
-    runtime: static
-    repo: https://github.com/Occumed79/Provider-Intelligence-Hub
-    branch: main
-    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/occu-med-hub build
-    staticPublishPath: artifacts/occu-med-hub/dist/public
-    envVars:
-      - key: NODE_VERSION
-        value: 22
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: BASE_PATH
-        value: /
-      - key: VITE_API_BASE_URL
         sync: false
