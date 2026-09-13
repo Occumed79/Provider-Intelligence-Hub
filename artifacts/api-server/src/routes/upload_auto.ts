@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { db, evidenceFilesTable, providersTable, reviewItemsTable, extractedFieldsTable } from "@workspace/db";
 import { UploadPastedTextBody } from "@workspace/api-zod";
 import { logger } from "../lib/logger";
-import { cleanExtractedText, extractDocumentText, type ExtractionMode } from "../lib/document-extraction";
+import { cleanExtractedText, extractDocumentText, type ExtractionMode } from "../lib/document-intake-extraction";
 
 const uploadDir = path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
