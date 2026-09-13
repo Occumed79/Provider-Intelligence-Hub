@@ -17,6 +17,10 @@ export function validateProductionDatabaseUrl(
     throw new Error("DATABASE_URL is not a valid PostgreSQL URL.");
   }
 
+  if (parsed.protocol !== "postgres:" && parsed.protocol !== "postgresql:") {
+    throw new Error("Production DATABASE_URL must use the PostgreSQL protocol.");
+  }
+
   if (!parsed.hostname.endsWith(".neon.tech")) {
     throw new Error(
       "Production DATABASE_URL must point to Neon PostgreSQL (*.neon.tech).",
