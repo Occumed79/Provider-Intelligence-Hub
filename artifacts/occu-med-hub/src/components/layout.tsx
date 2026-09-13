@@ -18,6 +18,7 @@ import {
   Gauge,
   FileBarChart2,
   MapPinned,
+  Radar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { label: "Dashboard", href: "/" },
+    { label: "Network Development", href: "/network-development" },
     { label: "Upload Intake", href: "/upload" },
     { label: "Evidence Library", href: "/evidence" },
     { label: "Provider Database", href: "/providers" },
@@ -59,6 +61,7 @@ export function Layout({ children }: LayoutProps) {
 
   const iconMap: Record<string, React.ElementType> = {
     "/": Activity,
+    "/network-development": Radar,
     "/upload": UploadCloud,
     "/evidence": FolderSearch,
     "/providers": Building2,
@@ -76,7 +79,6 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen w-full overflow-hidden text-foreground">
       <AnimatedBackground />
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm md:hidden"
@@ -84,7 +86,6 @@ export function Layout({ children }: LayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
       <aside 
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0",
@@ -170,7 +171,6 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 h-full relative z-10">
         <div className="h-16 flex items-center px-4 md:hidden border-b border-white/[0.05] bg-black/40 backdrop-blur-xl z-30">
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="text-white hover:bg-white/10">
