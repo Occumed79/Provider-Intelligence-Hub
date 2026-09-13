@@ -1,0 +1,48 @@
+name: Verify Unified Build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PORT: "3000"
+      BASE_PATH: "/"
+      NODE_ENV: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts=false
+
+      - name: Rebuild esbuild
+        run: pnpm rebuild esbuild
+
+      - name: Typecheck shared libraries
+        run: pnpm run typecheck:libs
+
+      - name: Typecheck frontend
+        run: pnpm --filter @workspace/occu-med-hub typecheck
+
+      - name: Build frontend
+        run: pnpm --filter @workspace/occu-med-hub build
+
+      - name: Build API
+        run: pnpm --filter @workspace/api-server build
+
+      - name: Verify frontend output
+        run: test -f artifacts/occu-med-hub/dist/public/index.html
