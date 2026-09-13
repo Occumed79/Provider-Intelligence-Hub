@@ -16,6 +16,34 @@ services:
         sync: false
       - key: FRONTEND_ORIGIN
         sync: false
+      - key: LLAMA_CLOUD_API_KEY
+        sync: false
+      - key: LLAMA_CLOUD_API_KEY_2
+        sync: false
+      - key: LLAMA_CLOUD_API_KEY_3
+        sync: false
+      - key: LLAMA_CLOUD_API_KEY_4
+        sync: false
+      - key: LLAMA_CLOUD_API_KEY_5
+        sync: false
+      - key: OCRSPACE_API_KEY
+        sync: false
+      - key: OCRSPACE_API_KEY_2
+        sync: false
+      - key: OCRSPACE_API_KEY_3
+        sync: false
+      - key: OCRSPACE_API_KEY_4
+        sync: false
+      - key: OCRSPACE_API_KEY_5
+        sync: false
+      - key: OPTIIC_API_KEY
+        sync: false
+      - key: OPTIIC_API_KEY_2
+        sync: false
+      - key: OPTIIC_API_KEY_3
+        sync: false
+      - key: OPTIIC_API_KEY_4
+        sync: false
 
   - type: web
     name: provider-intelligence-hub-frontend

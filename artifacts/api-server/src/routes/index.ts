@@ -5,7 +5,7 @@ import evidenceRouter from "./evidence";
 import providersRouter from "./providers";
 import reviewRouter from "./review";
 import searchRouter from "./search";
-import uploadRouter from "./upload";
+import uploadRouter from "./upload_auto";
 import analyticsRouter from "./analytics";
 import outreachMgmtRouter from "./outreach_mgmt";
 import secureCommsRouter from "./secure_comms";

@@ -12,6 +12,7 @@ import ProviderDetail from "@/pages/provider-detail";
 import Search from "@/pages/search";
 import Analyst from "@/pages/analyst";
 import Outreach from "@/pages/outreach";
+import NetworkDevelopment from "@/pages/network-development";
 import SecureComms from "@/pages/secure-comms";
 import Portal from "@/pages/portal";
 import MapCoverage from "@/pages/map";
@@ -76,6 +77,7 @@ function Router() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/dashboard" component={Dashboard} />
+            <Route path="/network-development" component={NetworkDevelopment} />
             <Route path="/upload" component={Upload} />
             <Route path="/evidence" component={Evidence} />
             <Route path="/providers" component={Providers} />
