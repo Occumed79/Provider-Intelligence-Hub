@@ -5,6 +5,7 @@ import {
   PROCUREMENT_STAGES,
   procurementRecordsTable,
   providersTable,
+  providerActivityTable,
   auditEventsTable,
 } from "@workspace/db";
 
@@ -27,6 +28,47 @@ function asOptionalDate(value: unknown) {
 function normalizeStage(value: unknown) {
   const stage = String(value ?? "Need Identified").trim();
   return stageSet.has(stage) ? stage : null;
+}
+
+async function linkActivatedProvider(record: typeof procurementRecordsTable.$inferSelect) {
+  if (record.stage !== "Activated / Live") return record;
+
+  let provider = record.providerId
+    ? (await db.select().from(providersTable).where(eq(providersTable.id, record.providerId)).limit(1))[0]
+    : undefined;
+
+  if (!provider) {
+    provider = (await db.select().from(providersTable).where(eq(providersTable.clinicName, record.providerName)).orderBy(desc(providersTable.updatedAt)).limit(1))[0];
+  }
+
+  if (!provider) {
+    [provider] = await db.insert(providersTable).values({
+      clinicName: record.providerName,
+      city: record.city,
+      state: record.state,
+      servicesOffered: record.serviceCategory,
+      verificationStatus: "Activated",
+      sourceCount: "1",
+      notes: `Created automatically when procurement record #${record.id} was activated.`,
+    }).returning();
+  }
+
+  if (record.providerId !== provider.id) {
+    [record] = await db.update(procurementRecordsTable)
+      .set({ providerId: provider.id })
+      .where(eq(procurementRecordsTable.id, record.id))
+      .returning();
+  }
+
+  await db.insert(providerActivityTable).values({
+    providerId: provider.id,
+    activityType: "network_activation",
+    title: "Provider activated in Network Development",
+    detail: `Procurement record #${record.id} moved to Activated / Live.`,
+    createdBy: "system",
+  });
+
+  return record;
 }
 
 router.get("/procurement", async (req, res): Promise<void> => {
@@ -81,7 +123,7 @@ router.post("/procurement", async (req, res): Promise<void> => {
   }
 
   const now = new Date();
-  const [record] = await db.insert(procurementRecordsTable).values({
+  let [record] = await db.insert(procurementRecordsTable).values({
     providerId: provider?.id || null,
     providerName,
     city: asOptionalText(req.body?.city) ?? provider?.city ?? null,
@@ -98,6 +140,8 @@ router.post("/procurement", async (req, res): Promise<void> => {
     lostAt: stage === "Lost / Not Viable" ? now : null,
     notes: asOptionalText(req.body?.notes),
   }).returning();
+
+  if (record.stage === "Activated / Live") record = await linkActivatedProvider(record);
 
   await db.insert(auditEventsTable).values({
     entityType: "procurement_record",
@@ -147,11 +191,15 @@ router.patch("/procurement/:id", async (req, res): Promise<void> => {
     if (req.body?.[field] !== undefined) updates[field] = asOptionalDate(req.body[field]);
   });
 
-  const [record] = await db
+  let [record] = await db
     .update(procurementRecordsTable)
     .set(updates)
     .where(eq(procurementRecordsTable.id, id))
     .returning();
+
+  if (record.stage === "Activated / Live" && before.stage !== "Activated / Live") {
+    record = await linkActivatedProvider(record);
+  }
 
   await db.insert(auditEventsTable).values({
     entityType: "procurement_record",
