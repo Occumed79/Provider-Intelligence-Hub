@@ -14,6 +14,7 @@ import Analyst from "@/pages/analyst";
 import Outreach from "@/pages/outreach";
 import NetworkDevelopmentLive from "@/pages/network-development-live";
 import Procurement from "@/pages/procurement";
+import ExpansionBrief from "@/pages/expansion-brief";
 import SecureComms from "@/pages/secure-comms";
 import Portal from "@/pages/portal";
 import MapCoverage from "@/pages/map";
@@ -80,6 +81,7 @@ function Router() {
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/network-development" component={NetworkDevelopmentLive} />
             <Route path="/procurement" component={Procurement} />
+            <Route path="/expansion-brief" component={ExpansionBrief} />
             <Route path="/upload" component={Upload} />
             <Route path="/evidence" component={Evidence} />
             <Route path="/providers" component={Providers} />
