@@ -12,7 +12,7 @@ import ProviderDetail from "@/pages/provider-detail";
 import Search from "@/pages/search";
 import Analyst from "@/pages/analyst";
 import Outreach from "@/pages/outreach";
-import NetworkDevelopment from "@/pages/network-development";
+import NetworkDevelopmentLive from "@/pages/network-development-live";
 import Procurement from "@/pages/procurement";
 import SecureComms from "@/pages/secure-comms";
 import Portal from "@/pages/portal";
@@ -78,7 +78,7 @@ function Router() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/dashboard" component={Dashboard} />
-            <Route path="/network-development" component={NetworkDevelopment} />
+            <Route path="/network-development" component={NetworkDevelopmentLive} />
             <Route path="/procurement" component={Procurement} />
             <Route path="/upload" component={Upload} />
             <Route path="/evidence" component={Evidence} />
