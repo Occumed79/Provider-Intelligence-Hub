@@ -19,6 +19,7 @@ import {
   FileBarChart2,
   MapPinned,
   Radar,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export function Layout({ children }: LayoutProps) {
   const navItems = [
     { label: "Dashboard", href: "/" },
     { label: "Network Development", href: "/network-development" },
+    { label: "Procurement Command", href: "/procurement" },
     { label: "Upload Intake", href: "/upload" },
     { label: "Evidence Library", href: "/evidence" },
     { label: "Provider Database", href: "/providers" },
@@ -62,6 +64,7 @@ export function Layout({ children }: LayoutProps) {
   const iconMap: Record<string, React.ElementType> = {
     "/": Activity,
     "/network-development": Radar,
+    "/procurement": Target,
     "/upload": UploadCloud,
     "/evidence": FolderSearch,
     "/providers": Building2,

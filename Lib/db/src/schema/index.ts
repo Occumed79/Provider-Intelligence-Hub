@@ -3,6 +3,7 @@ export * from "./providers";
 export * from "./review_items";
 export * from "./extracted_fields";
 export * from "./outreach_records";
+export * from "./procurement_records";
 export * from "./provider_invites";
 export * from "./secure_messages";
 export * from "./difficulty_reports";
